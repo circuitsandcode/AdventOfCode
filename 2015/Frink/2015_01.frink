@@ -1,0 +1,43 @@
+start = now[]
+
+// Import the directions using the read command. This will import the file into a single string.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+directionsStr = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_01_input.txt"]
+
+// Set starting variables
+floors = 0
+counter = 0
+basementcheck = 0 // Part II
+
+// Convert the Directions String to an Array
+directions = charList[directionsStr]
+
+// Loop through the Directions array.
+for direction = directions
+{
+   // Adjust the floors variable depending on the current direction.
+   counter = counter+1
+   if direction == "("
+   {
+      floors = floors+1
+   } else
+   {
+      floors = floors-1
+   }
+   
+   // Part II
+   // Use the basementcheck variable to determine if this is Santa's first visit to the basement.
+   if floors < 0 && basementcheck == 0
+   {
+      println["Santa entered the basement on move $counter."]
+	  // Chante the basementcheck variable so that this code doesn't run again.
+      basementcheck = 1
+   }
+   // End Part II
+}
+
+// The loop will end with Santa's current location.
+println["Santa ended on floor $floors."]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
