@@ -1,0 +1,54 @@
+start = now[]
+
+// Import the dimensions using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+dimensions = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_02_input.txt"]
+
+// Set starting variables
+totalpaper = 0
+totalribbon = 0
+
+// Loop through the Dimensions array.
+for dimension = dimensions
+{
+   // Split the dimensions into length, width, height array
+   sizes = split["x",dimension]
+
+   // Sizes are brought in as strings from the lines function. The parseInt function converts the values to interger.
+   sizes@0 = parseInt[sizes@0] // length
+   sizes@1 = parseInt[sizes@1] // width
+   sizes@2 = parseInt[sizes@2] // height
+
+   // Determine the smallest side
+   smallestside = min[sizes]
+
+   // Get the area of each side. These will be put into an array
+   areas = [sizes@0*sizes@1,sizes@1*sizes@2,sizes@0*sizes@2]
+
+   // get the smallest size area from the array
+   smallestside = min[areas]
+   
+   // Determin the paper needed using the formula given.
+   paper = (2 * areas@0) + (2 * areas@1) + (2 * areas@2) + smallestside // 2*l*w + 2*w*h + 2*h*l + smallest side
+
+   // Increment the totalpaper variable
+   totalpaper = totalpaper + paper
+
+   // Part II
+   // Sort the sides from smallest to largest.
+   sizes = sort[sizes]
+
+   // Shortest distanct around two sides + cubic area
+   ribbon = (sizes@0 * 2 + sizes@1 * 2) + product[sizes]
+
+   // Increment the totalribbon variable
+   totalribbon = totalribbon + ribbon 
+   // End Part II
+}
+
+// Print the answers to the puzzle for Part I and Part II.
+println["The elves need $totalpaper square feet of paper."]
+println["The elves need $totalribbon feet of ribbon."] // Part II
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
