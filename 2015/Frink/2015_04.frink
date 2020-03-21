@@ -1,0 +1,54 @@
+start = now[]
+
+// Import the dimensions using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+SecretKey = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_04_input.txt"]
+
+// Part 1
+// Set starting variables
+counter = 0
+i = false
+
+// Loop through each possible MD5Hash until the first 5 digits match 00000
+while i == false
+{
+   counter = counter + 1
+   StringVal = SecretKey + counter
+   // messageDigest is the function that can calculate MD5
+   MD5Hash = messageDigest[StringVal, "MD5"]
+   // Get a substring of just the first 5 digits
+   MD5HashFirst5 = substr[MD5Hash,0,5]
+   if MD5HashFirst5 == "00000"
+   {
+      println["Part 1 Answer is : " + counter]
+      println["Part 1 MD5 Hash is: " + MD5Hash]
+      // Set i to true and end the loop.
+      i = true
+   }
+}
+
+// Part 2
+counter = 0
+i = false
+
+// Same loop as above but now looking for first 6 digits matching 000000
+while i == false
+{
+   counter = counter + 1
+   StringVal = SecretKey + counter
+   MD5Hash = messageDigest[StringVal, "MD5"]
+   // Get a substring of just the first 6 digits
+   MD5HashFirst5 = substr[MD5Hash,0,6]
+   if MD5HashFirst5 == "000000"
+   {
+      println["Part 2 Answer is : " + counter]
+      println["Part 2 MD5 Hash is: " + MD5Hash]
+      // Set i to true and end the loop.
+      i = true
+   }
+}
+
+// The above code could be done as a function as well to solve both Part I and Part II.
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

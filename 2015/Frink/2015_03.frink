@@ -1,0 +1,77 @@
+start = now[]
+
+// Import the dimensions using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+DirectionsString = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_03_input.txt"]
+
+// Divide the string into an array of characters.
+Directions = charList[DirectionsString]
+
+// Create dictionaries and arrays used by the script
+HouseGrid = new dict
+HouseGridYear2 = new dict
+SantaDirections = new array // Used in Part 2
+RoboDirections = new array // Used in Part 2
+
+// Divide the directions into Santa and Robo Santa Parts // Used in Part 2
+counter = 0
+for Direction = Directions
+{
+   if counter mod 2 == 0
+   {
+      SantaDirections.push[Direction]
+   } else
+   {
+      RoboDirections.push[Direction]
+   }
+   counter = counter + 1
+}
+
+// Create a function to deliver presents in the Directions // Used by both Parts
+DeliverPresents[DirectionInput] :=
+{
+   counter = 0
+   CurrentHouseVisit = makeArray[[2],0] // Create the starting location of [0,0]
+   HousesVisited = new dict
+   HousesVisited.increment[CurrentHouseVisit.shallowCopy[],1] // Add the starting location of [0,0] to the dictionary with an increment count of 1. Use shallowCopy since otherwise the dictionary key would be passed by reference and subject to change.
+   for Direction = DirectionInput
+   {
+      counter = counter + 1
+      // First element of array changes for north and south directions. Second element changes for east and west directions.
+      if Direction == "^"
+      {
+         CurrentHouseVisit@0 = CurrentHouseVisit@0 + 1
+      }
+      if Direction == "v"
+      {
+         CurrentHouseVisit@0 = CurrentHouseVisit@0 - 1
+      }
+      if Direction == ">"
+      {
+         CurrentHouseVisit@1 = CurrentHouseVisit@1 + 1
+      }
+      if Direction == "<"
+      {
+         CurrentHouseVisit@1 = CurrentHouseVisit@1 - 1
+      }
+      HousesVisited.increment[CurrentHouseVisit.shallowCopy[],1] // Add the current array to the dictionary (or increase the increment for it if already existing) (using shallowCopy to get the array value).
+   }
+   return HousesVisited
+}
+
+// Run the functions for the various direction arrays
+Year1 = DeliverPresents[Directions] // Part 1
+Year2 = DeliverPresents[SantaDirections] // Part 2
+Year2Robo = DeliverPresents[RoboDirections] // Part 2
+
+// Combine the Santa and RoboSanta houses visited into a single dictionary. // Part 2
+for RoboKey = keys[Year2Robo]
+{
+   Year2.increment[RoboKey,1]
+}
+
+println["In year one, " + length[Year1] + " homes got at least one present."] // Answer to Part 1
+println["In year two, " + length[Year2] + " homes got at least one present."] // Answer to Part 2
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
