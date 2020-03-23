@@ -1,0 +1,48 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+ListItems = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_08_input.txt"]
+
+// Set starting variables
+LengthCode = 0
+LengthValue = 0
+LengthEncoded = 0 // Part 2
+
+// Loop through the list
+for ListItem = ListItems
+{
+   stringtrim = ListItem =~ %r/^\"(.+?)\"$/
+   stringtrimedit = stringtrim@0
+   stringencoded = stringtrimedit // Part 2
+
+   // Replace remove / when used as an escape character
+   stringtrimedit =~ %s/\\([\\\"])/$1/g
+
+   // remove hexadecimal unicode characters. Replacing with the letter "Z" for simplicity
+   stringtrimedit =~ %s/(\\x[a-f0-9][a-f0-9])/Z/g
+
+   LengthCode = LengthCode + length[ListItem]
+   LengthValue = LengthValue + length[stringtrimedit]
+   
+   // Encoded Literals
+   stringencoded =~ %s/(\\)([\\\"])/\\\\\\$2/g
+
+   // Encoded Hex
+   stringencoded =~ %s/(\\x)([a-f0-9][a-f0-9])/\\\\x$2/g
+
+   stringencoded = "\"" + stringencoded + "\""
+
+   // Starting Quote
+   stringencoded =~ %s/^(\")/\"\\\"/
+
+   // Ending Quote
+   stringencoded =~ %s/(\")$/\\\"\"/
+
+   LengthEncoded = LengthEncoded + length[stringencoded]
+}
+println["Character Difference: " + (LengthCode-LengthValue)] // Part I
+println["Encoded Difference: " + (LengthEncoded-LengthCode)] // Part II
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

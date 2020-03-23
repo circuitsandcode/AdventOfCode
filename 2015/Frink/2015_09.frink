@@ -1,0 +1,55 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+RouteList = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_09_input.txt"]
+
+// Set starting variables
+RouteMap = new dict
+CitySet = new set
+
+// Loop through RouteList
+for Route = RouteList
+{
+   [City1,City2,DistanceVal] = Route =~ %r/^(\w+?) to (\w+?) = (\d+?)$/
+   Distance = parseInt[DistanceVal]
+   RouteInput = [City1,City2]
+   RouteInputAlt = [City2,City1]
+   RouteMap@RouteInput = Distance
+   RouteMap@RouteInputAlt = Distance
+   CitySet.put[City1]
+   CitySet.put[City2]
+}
+
+// Convert the set to an array to use the permute function.
+CityArray = toArray[CitySet]
+
+AllPossibleRoutes = CityArray.permute[]
+
+PreviousMinDistance = 10000 // Arbitrary high number for lt comparison
+PreviousMaxDistance = 0 // Part 2 - Arbitrary low number for gt comparison
+// Loop through every possible route to determine the shortest and longest (Part II) routes.
+for PossibleRoute = AllPossibleRoutes
+{
+   RouteDistance = 0
+   for i = 0 to (length[PossibleRoute] - 2)
+   {
+      Cities = [PossibleRoute@i,PossibleRoute@(i+1)]
+      CityDistance = RouteMap@Cities
+      RouteDistance = RouteDistance + CityDistance
+   }
+   if RouteDistance < PreviousMinDistance
+   {
+      PreviousMinDistance = RouteDistance
+   }
+   if RouteDistance > PreviousMaxDistance // Part 2
+   {
+      PreviousMaxDistance = RouteDistance
+   }
+}
+
+println["Shortest distance is: " + PreviousMinDistance]
+println["Logest distance is: " + PreviousMaxDistance] // Part 2
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

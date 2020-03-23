@@ -1,0 +1,89 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+instructions = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_06_input.txt"]
+
+// Make starting arrays of 1,000 by 1,000 with all starting values set to 0.
+partIgrid = makeArray[[1000,1000], 0] // Part I
+partIIgrid = makeArray[[1000,1000], 0] // Part II
+// Setting a variable to capture the total number of calculations performed. Just to be interesting.
+calcs = 0
+
+for instruction = instructions
+{
+   // Strings will be something like this: "turn on 429,912 through 359,468"
+   // This regex will capture the first non-digit characters (i.e. turn on), and then each group of digits into an array.
+   [lights,x1,y1,x2,y2] = instruction =~ %r/^(\D+?)\s(\d+?),(\d+?)\sthrough\s(\d+?),(\d+?)$/
+   // Regex returns all values as strings. This coverts them to integer. 
+   x1 = parseInt[x1]
+   x2 = parseInt[x2]
+   y1 = parseInt[y1]
+   y2 = parseInt[y2]
+   
+   // Adjustments for turning lights on or off.
+   if lights == "turn on" or lights == "turn off"
+   {
+      // Part I the bulb can only go on and off. In Part II, each bulb has varying brightess.
+      if lights == "turn on"
+      {
+         bulb1 = 1 // Part I
+         bulb2 = 1 // Part II
+      } else
+      {
+         bulb1 = 0
+         bulb2 = -1
+      }
+      for x = x1 to x2 // Loop through the x axis of bulbs to turn on/off
+      {
+         for y = y1 to y2 // Loop through y axis of bulbs to turn on/off
+         {
+            partIgrid@x@y = bulb1
+            // The brightness of the bulb can't be lowered below 0
+            if (partIIgrid@x@y > 0 && bulb2 == -1) || bulb2 == 1
+            {
+               partIIgrid@x@y = partIIgrid@x@y + bulb2
+            }
+            calcs = calcs + 1
+         }
+      }
+   }
+   if lights == "toggle"
+   {
+      for x = x1 to x2
+      {
+         for y = y1 to y2
+         {
+            if partIgrid@x@y == 0
+            {
+               partIgrid@x@y = 1
+            } else
+            {
+               partIgrid@x@y = 0
+            }
+            // In part II, the toggle just increases brightness by 2
+            partIIgrid@x@y = partIIgrid@x@y + 2
+            calcs = calcs + 1
+         }
+      }
+   }
+} // end of instruction loop
+
+arraySum = 0
+for partIbulb = partIgrid
+{
+   // Sum the row of 1,000 bulbs.
+   arraySum = arraySum + sum[partIbulb]
+}
+arraySum2 = 0
+for partIIbulb = partIIgrid
+{
+   arraySum2 = arraySum2 + sum[partIIbulb]
+}
+println["Part 1 total lights on: " + arraySum]
+println["Part 2 total brightness: " + arraySum2]
+// Calculations were included just to be interesting.
+println["Total calculations: " + calcs]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

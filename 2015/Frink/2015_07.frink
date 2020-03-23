@@ -1,0 +1,118 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Part I Input File
+instructions = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_07_input.txt"]
+// Part II Input File with needed modifcation. (Override wire b with the the signal from wire a in Part I.) This could have been coded but I was lazy.
+//instructions = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_07_input_pt2.txt"]
+
+/*
+Create a dictionary translating the terms used in the
+puzzle to Frink bitwise commands.
+*/
+BitFunctions = new dict
+BitFunctions@"AND" = "bitAnd"
+BitFunctions@"OR" = "bitOr"
+BitFunctions@"LSHIFT" = "shiftLeft"
+BitFunctions@"RSHIFT" = "shiftRight"
+BitFunctions@"NOT" = "bitXor"
+/*
+Note that Frink bitNot function uses a two's complement number
+representation instead of the unary NOT used in the problem.
+For this reason, I'm apply a XOR with the 16 bit maximum of 65535
+to negate the bits of whatever number it is compared with.
+*/
+
+// Create a dictionary of wire values
+WireValues = new dict
+
+// Create an array for storing wire names
+WireArray = new array
+WireArrayInput = new array
+
+// Loop through the wire values until wire a is defined.
+while WireValues@"a" == undef
+{
+   for instruction = instructions
+   {
+      // Using regex to determine the current instruction values.
+      // BitwiseCommand will be in captial letters
+      [BitwiseCommand] = instruction =~ %r/([A-Z]+?)\s/
+      // Wires will be in lower case letters
+      [ConnectingWiresInput] = instruction =~ %r/([a-z]+?)\s/g
+      ConnectingWires = flatten[ConnectingWiresInput]
+      // Capture any numberic values in the string.
+      [NumericInput] = instruction =~ %r/([0-9]+?)\s/
+      if NumericInput != undef
+      {
+         // Convert string value to integer.
+         NumericValue = parseInt[NumericInput]
+      } else
+      {
+         NumericValue = undef
+      }
+      // Destination wire is after the ->
+      [Wire] = instruction =~ %r/->\s([a-z]+?)$/
+      if WireValues@Wire != undef
+      {
+         next
+      }
+      if BitwiseCommand == undef && length[ConnectingWires] == 1 && NumericValue == undef
+      {
+         Wire1 = ConnectingWires@0
+         if WireValues@Wire1 == undef
+         {
+            next
+         } else
+         {
+            NumericValue = WireValues@Wire1
+         }
+      }
+      if BitwiseCommand == undef
+      {
+         // If there's no BitwiseCommand, the wire is set to the NumericValue
+         WireValues@Wire = NumericValue
+      } else
+      {
+         WireArray.clear[]
+         WireArrayInput.clear[]
+         for ConnectingWire = ConnectingWires
+         {
+            WireArrayInput.push[WireValues@ConnectingWire]
+         }
+
+         WireArrayInput.push["NA"] // Populates unused variable for undef check to work
+         WireArray = flatten[WireArrayInput]
+         if WireArray@0 == undef || WireArray@1 == undef
+         {
+            next
+         }
+         // Apply the BitwiseCommand as a mapped function
+         if BitwiseCommand == "AND" || BitwiseCommand == "OR"
+         {
+            if WireArray@1 == "NA" and NumericValue != undef
+            {
+               value = mapList[BitFunctions@BitwiseCommand,WireArray@0,NumericValue]
+            } else
+            {
+               value = mapList[BitFunctions@BitwiseCommand,WireArray@0,WireArray@1]
+            }
+         }
+         if right[BitwiseCommand,5] == "SHIFT" // LSHIFT or RSHIFT
+         {
+            value = mapList[BitFunctions@BitwiseCommand,WireArray@0,NumericValue]
+         }
+         if BitwiseCommand == "NOT"
+         {
+            // Hard coding a value of 65535 to be compared in the XOR to flip 16 bits
+            value = mapList[BitFunctions@BitwiseCommand,WireArray@0,65535]
+         }
+         WireValues@Wire = value
+      }
+   }
+}
+println["The value of wire a is " + WireValues@"a"@0]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

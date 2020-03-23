@@ -1,0 +1,62 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+NaughtyNiceList = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_05_input.txt"]
+
+// Day 1
+// Set starting variables
+Naughty = 0
+Nice = 0
+
+for NaughtyNice = NaughtyNiceList
+{
+   // Any string containing "ab", "cd", "pq", or "xy" is automatically naughty. Regex will return undef if none found.
+   NaughtyCheck = NaughtyNice =~ %r/ab|cd|pq|xy/i 
+   if NaughtyCheck != undef
+   {
+      Naughty = Naughty + 1
+      next // Skip the rest of the loop.
+   }
+   // Any string containing any three values (a,e,i,o,u)
+   NiceCheck1 = NaughtyNice =~ %r/[aeiou]/gi
+   // Any string containing two of the same letters in a row ("aa", "bb", "cc", etc) is nice
+   NiceCheck2 = NaughtyNice =~ %r/([a-z])\1/i
+   if length[NiceCheck1] >= 3 and NiceCheck2 != undef
+   {
+      Nice = Nice + 1
+   } else
+   {
+      Naughty = Naughty + 1
+   }
+}
+
+println["Part 1: There are $Nice nice children on the list"]
+println["Part 1: There are $Naughty naughty children on the list"]
+
+// Day 2
+// Set starting variables
+Naughty = 0
+Nice = 0
+
+for NaughtyNice = NaughtyNiceList
+{
+   // Any string containing a pair of any two letters that appears at least twice in the string without overlapping, like xyxy (xy) or aabcdefgaa (aa)
+   NiceCheck1 = NaughtyNice =~ %r/([a-z][a-z]).*?\1/i
+   // Any string containing at least one letter which repeats with exactly one letter between them, like xyx, abcdefeghi (efe), or even aaa.
+   NiceCheck2 = NaughtyNice =~ %r/([a-z])[a-z]\1/i
+   // If they've both returned a result (i.e. not undef/falsey) then then string is nice.
+   if NiceCheck1 and NiceCheck2
+   {
+      Nice = Nice + 1
+   } else
+   {
+      Naughty = Naughty + 1
+   }
+}
+
+println["Part 2: There are $Nice nice children on the list"]
+println["Part 2: There are $Naughty naughty children on the list"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
