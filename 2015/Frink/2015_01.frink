@@ -1,6 +1,6 @@
 start = now[]
 
-// Import the directions using the read function. This will import the file into a single string.
+// Import the input file using the read function. This will import the file into a single string.
 // The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
 directionsStr = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_01_input.txt"]
 

@@ -1,6 +1,6 @@
 start = now[]
 
-// Import the dimensions using the lines function. This will import the file into an array.
+// Import the input file using the lines function. This will import the file into an array.
 // The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
 dimensions = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_02_input.txt"]
 
