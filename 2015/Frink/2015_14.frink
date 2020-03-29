@@ -1,0 +1,139 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+FlightDetails = lines["file:///C:/AdventOfCode/2015/2015_14_input.txt"]
+
+RestingDict = new dict
+FlyingSpeedDict = new dict
+FlyingTimeDict = new dict
+ReindeerOnOff = new dict
+ReindeerNextChange = new dict
+ReindeerDistance = new dict
+ReindeerSet = new set
+
+// Loop through the input file and extract values using Regex
+for FlightDetail = FlightDetails
+{
+   Detail = FlightDetail =~ %r/^(\w+).+\s(\d+)\sk.+\s+(\d+).+b.+\s(\d+).+$/
+   Reindeer = Detail@0
+   RestingDict@Reindeer = parseInt[Detail@3]
+   FlyingSpeedDict@Reindeer = parseInt[Detail@1]
+   FlyingTimeDict@Reindeer = parseInt[Detail@2]
+   ReindeerOnOff@Reindeer = 1 // All deer start flying
+   ReindeerNextChange@Reindeer = parseInt[Detail@2] // Starting off with when they need to rest
+   ReindeerDistance@Reindeer = 0 // Starting the race at 0
+   ReindeerSet.put[Reindeer]
+}
+
+for racetime = 1 to 2503
+{
+   for Reindeer = ReindeerSet
+   {
+      if ReindeerOnOff@Reindeer == 1
+      {
+         ReindeerDistance@Reindeer = ReindeerDistance@Reindeer + FlyingSpeedDict@Reindeer
+      }
+      // Check if it is time for Reindeer to switch from flying to resting
+      if racetime == ReindeerNextChange@Reindeer
+      {
+         if ReindeerOnOff@Reindeer == 0
+         {
+            // Switch the reindeer and set their next change time.
+            ReindeerOnOff@Reindeer = 1
+            ReindeerNextChange@Reindeer = FlyingTimeDict@Reindeer + racetime
+         } else
+         {
+            ReindeerOnOff@Reindeer = 0
+            ReindeerNextChange@Reindeer = RestingDict@Reindeer + racetime
+         }
+      }
+   }
+}
+
+// Printing all reindeer times just for fun.
+for DistanceKey = keys[ReindeerDistance]
+{
+   println[DistanceKey + " - " + ReindeerDistance@DistanceKey]
+   Distance = ReindeerDistance@DistanceKey
+   if Distance > maxDistance
+   {
+      maxDistance = Distance
+   }
+}
+
+// Print the answer.
+println[]
+println["The winner went " + maxDistance]
+println[]
+
+// Part II
+// Create a variable to store max distance and a dictionary to store the reindeer points.
+maxDistance = 0
+ReindeerPoints = new dict
+
+for Reindeer = ReindeerSet
+{
+   ReindeerDistance@Reindeer = 0 // Starting the race at 0
+   ReindeerNextChange@Reindeer = FlyingTimeDict@Reindeer // Starting race in flying position
+   ReindeerOnOff@Reindeer = 1
+   ReindeerPoints@Reindeer = 0
+}
+
+for racetime = 1 to 2503
+{
+   for Reindeer = ReindeerSet
+   {
+      if ReindeerOnOff@Reindeer == 1
+      {
+         ReindeerDistance@Reindeer = ReindeerDistance@Reindeer + FlyingSpeedDict@Reindeer
+      }
+      if racetime == ReindeerNextChange@Reindeer
+      {
+         if ReindeerOnOff@Reindeer == 0
+         {
+            ReindeerOnOff@Reindeer = 1
+            ReindeerNextChange@Reindeer = FlyingTimeDict@Reindeer + racetime
+         } else
+         {
+            ReindeerOnOff@Reindeer = 0
+            ReindeerNextChange@Reindeer = RestingDict@Reindeer + racetime
+         }
+      }
+   }
+   maxDistance = 0
+   for DistanceKey = keys[ReindeerDistance]
+   {
+      Distance = ReindeerDistance@DistanceKey
+      if Distance > maxDistance
+      {
+         maxDistance = Distance
+      }
+   }
+   // Check if the Reindeer is in the lead and if so, give it a point.
+   for Reindeer = ReindeerSet
+   {
+      if ReindeerDistance@Reindeer == maxDistance
+      {
+         ReindeerPoints@Reindeer = ReindeerPoints@Reindeer + 1
+      }
+   }
+}
+
+// Create a variable for maxPoints and loop through the dictionary to determine the winner.
+maxPoints = 0
+for PointsKey = keys[ReindeerPoints]
+{
+   println[PointsKey + " - " + ReindeerPoints@PointsKey]
+   Points = ReindeerPoints@PointsKey
+   if Points > maxPoints
+   {
+      maxPoints = Points
+   }
+}
+
+println[]
+println["The winner earned " + maxPoints + " points!"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

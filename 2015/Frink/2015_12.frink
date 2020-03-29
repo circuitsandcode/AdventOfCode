@@ -1,0 +1,101 @@
+start = now[]
+
+// Import the input file using the read function. This will import the file into a single string.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+str = read["file:///C:/AdventOfCode/2015/2015_12_input.txt"]
+
+// Part I
+// Use regex to look for all integers (positive and negative) in the imported string.
+strR = str =~ %r/(\-?\d+)/g
+
+// Flatten the results into a single array
+strF = flatten[strR]
+
+// Loop through the array and convert the imported string values to intergers.
+// A map function applying parseInt to the entire array probbaly would have been quicker here.
+for i = 0 to (length[strR] - 1)
+{
+   strF@i = parseInt[strF@i]
+}
+
+// Print the sum of all values in the array.
+println[sum[strF]] //Part I
+
+// Part II
+// Parse the JSON input.
+strJ = parseJSON[str]
+
+// Create a function to read the JSON
+JSONCheck[CurrentLevel,LevelNum=0,LevelType="U",RunningTotal=0] :=
+{
+   CLTotal = 0
+   RedCheck = false
+   // Capture dictionary values.
+   if LevelType == "D"
+   {
+      CLKeys = keys[CurrentLevel] // Apply this to the loop below to only analyze keys and not dictionary values.
+      CLKeysArr = toArray[CLKeys]
+   }
+   for CL = CurrentLevel
+   {
+      if RedCheck == false
+      {
+         // Get dictionary key to reference
+         if LevelType == "D"
+         {
+            CL = CL@1 // This solved it!
+         }
+         DictCheck = false
+         ArrayCheck = false
+         StringCheck = false
+         IntegerCheck = false
+         CurrentLevelType = "U"
+         NextLoop = false
+        
+         // Determine CurrentLevelType
+         DictCheck = isDict[CL]
+         ArrayCheck = isArray[CL]
+         StringCheck = isString[CL]
+         IntegerCheck = isInteger[CL]
+         // Set CurrentLevelType based on the functions above
+         if DictCheck == true
+         {
+            CurrentLevelType = "D"
+            NextLoop = true
+         }
+         if ArrayCheck == true
+         {
+            CurrentLevelType = "A"
+            NextLoop = true
+         }
+         if IntegerCheck == true
+         {
+            NextLoop = false // No need to run the next recursive function if the value is an integer.
+            CLTotal = CLTotal + CL
+         }
+         if StringCheck == true
+         {
+            NextLoop = false
+            // Skip any values of red
+            if CL == "red" && LevelType == "D"
+            {
+               RedCheck = true
+               CLTotal = 0 // Remove any value if Red appears in a dictionary
+           	   break // No need to evaluate further
+            }
+         }
+      }
+      if NextLoop == true
+      {
+         //RunningTotal
+         // Recursive run of the JSONCheck function
+         CLTotal = CLTotal + JSONCheck[CL,LevelNum+1,CurrentLevelType,CLTotal]
+      }
+   }
+return CLTotal
+}
+
+println[JSONCheck[strJ]] // Part II Result
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

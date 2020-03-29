@@ -1,0 +1,146 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+ingredients = lines["file:///C:/AdventOfCode/2015/2015_15_input.txt"]
+
+// Create dictionaries and variables needed for ingredients and properties.
+ingredientDict = new dict
+ingredientIDsDict = new dict
+propertyDict = new dict
+propertyValues = new set
+ingredientCounter = 0
+
+// Loop through the ingredients.
+for ingredient = ingredients
+{
+   // Input string will be something like: "Sugar: capacity 3, durability 0, flavor 0, texture -3, calories 2"
+   // Use regex to extract the values.
+   ingredientR = ingredient =~ %r/^(\w+):/
+   ingredientVal = ingredientR@0
+   // Extract the properties of the ingredient
+   properties = ingredient =~ %r/\s(\w+)\s(-*\d+),*/g
+
+   propertyDict.clear[]
+   // Loop though the properties
+   for property = properties
+   {
+      // Extract name and value (and convert the value to int)
+      propertyName = property@0
+      propertyVal = parseInt[property@1]
+
+      propertyDict@propertyName = propertyVal
+      // Check if the set includes the value and add it if not.
+      if propertyValues.contains[propertyName] == false
+      {
+         propertyValues.put[propertyName]
+      }
+   }
+   // Add the property dictionary to the ingredient dictionary
+   ingredientDict@ingredientVal = deepCopy[propertyDict]
+   ingredientIDsDict@ingredientCounter = ingredientVal
+   ingredientCounter = ingredientCounter + 1
+}
+
+// Create dictionaries and variables needed for mixtures.
+mixtures = new set
+mixturesDict = new dict
+mixtureTspDict = new dict
+// upper is 97 (100 teaspoons - 3 for the types of ingredients
+upper = 97
+n = new array
+for i = 1 to 3
+   n.push[toArray[new range[1,upper]]]
+
+counter = 0
+LOOP:
+multifor a = n
+{
+   if sum[[a@0,a@1]] >= 99
+      next LOOP 1
+   if sum[[a@0,a@1,a@2]] >= 100
+      next LOOP 2 // Skip through the multifor loop levels
+   else
+   {
+      r = 100 - sum[a]
+      a.pushAll[r]
+      mixtures.put[a]
+      mixtureTspDict.clear[]
+      for x = 0 to 3
+      {
+         mixtureIng = ingredientIDsDict@x
+         mixtureTspDict@mixtureIng = a@x // a always follows the same order
+      }
+      mixturesDict@a = deepCopy[mixtureTspDict]
+   }
+   counter = counter + 1
+   if counter > 1000000 // Safety check
+      break
+}
+
+// Loop through the various mixtures
+maxScore = 0
+currentScore = 0
+cookieCalcCounter = 0
+cookiePropertyCalc = new dict
+// Using labeled loops
+LOOP1:
+for mixtureKeys1 = keys[mixturesDict] // Array Values
+{
+   cookiePropertyCalc.clear[] // Start fresh
+   LOOP2:
+   for mixtureIngredient = keys[mixturesDict@mixtureKeys1] // Ingredient Name (Sugar, Sprinkles, etc)
+   {
+      LOOP3:
+      for property = propertyValues // Property Name (flavor, capacity, flavor, etc)
+      {
+         // Part I -- Uncomment to run Part I
+         /*
+         if property == "calories"
+         {
+            next
+         }
+         */
+         // End Part I
+         // Calculaute the properties
+         propertyCalc = ingredientDict@mixtureIngredient@property * mixturesDict@mixtureKeys1@mixtureIngredient
+         cookiePropertyCalc.increment[property,propertyCalc]
+      }
+   }
+   cookieCalcCounter = 0
+   LOOP4:
+   for cookieProperty = keys[cookiePropertyCalc]
+   {
+      // Value can never be less than 0. Set it to 0 if it is.
+      if cookiePropertyCalc@cookieProperty < 1
+      {
+         cookiePropertyCalc@cookieProperty = 0
+      }
+      if cookieCalcCounter == 0
+      {
+         currentScore = cookiePropertyCalc@cookieProperty
+      } else
+      {
+         if cookieProperty == "calories" // This code will only run on Part II since calories are skipped in Part I
+         {
+            if cookiePropertyCalc@cookieProperty != 500
+            {
+               next LOOP1
+            }
+            cookiePropertyCalc@cookieProperty = 1 // No impact on multiplied score
+         } else
+         {
+            currentScore = currentScore * cookiePropertyCalc@cookieProperty
+         } 
+      }
+      cookieCalcCounter = cookieCalcCounter + 1
+   }
+   if currentScore > maxScore
+   {
+      maxScore = currentScore
+   }
+}
+
+println["The max score is " + maxScore]
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

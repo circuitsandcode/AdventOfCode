@@ -1,0 +1,90 @@
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+SeatingLists = lines["file:///C:/AdventOfCode/2015/2015_13_input.txt"]
+
+// Create data elements needed.
+SeatingPoints = new dict
+SeatingGuests = new array
+GuestsSet = new set
+
+// Loop through the input file to extract seating arrangements and associated happiness units.
+for SeatingList = SeatingLists
+{
+   SeatingGuests.clear[]
+   // Regex to capture all elements of the string. (Something like "Alice would gain 54 happiness units by sitting next to Bob.")
+   SeatingDetail = SeatingList =~ %r/^(\w+) would (\w+) (\d+).+ (\w+)\.$/
+   SeatingGuests.pushAll[[SeatingDetail@0,SeatingDetail@3]]
+   GuestsSet.put[SeatingDetail@0]
+   SeatingPoint = parseInt[SeatingDetail@2]
+   if SeatingDetail@1 == "lose"
+   {
+      SeatingPoint = SeatingPoint * -1 //Negative points
+   }
+   //println[SeatingPoint]
+   SeatingGuestsCopy = SeatingGuests.shallowCopy[]
+   // Add the guests and points to the dictionary
+   SeatingPoints@SeatingGuestsCopy = SeatingPoint
+}
+
+// Part II
+// Comment out this code to run Part I
+// Add yourself to the guest list
+for Guest = GuestsSet
+{
+   a = [Guest,"Me"]
+   b = ["Me",Guest]
+   SeatingPoints@a = 0
+   SeatingPoints@b = 0
+}
+
+GuestsSet.put["Me"]
+// End Part II
+
+// Convert to array so we can make a Permutations of all possible orders.
+GuestsArray = toArray[GuestsSet]
+AllSeatingPossibilities = GuestsArray.permute[]
+GuestLen = length[GuestsArray]
+
+// Variable to track maximum happiness
+MaxHappiness = 0
+
+// Loop through all combinations
+for SeatingPossibilities = AllSeatingPossibilities
+{
+   CurrentHappiness = 0
+   for Seat = 0 to (length[SeatingPossibilities] - 1)
+   {
+      // Start with seat to the left
+      if Seat == 0
+      {
+         SeatingPair = [SeatingPossibilities@Seat,SeatingPossibilities@(length[SeatingPossibilities] - 1)]
+      } else
+      {
+         SeatingPair = [SeatingPossibilities@Seat,SeatingPossibilities@(Seat-1)]
+      }
+      CurrentHappiness = sum[[CurrentHappiness,SeatingPoints@SeatingPair]]
+
+      // Seats to the right
+      if Seat == (length[SeatingPossibilities] - 1)
+      {
+         SeatingPair = [SeatingPossibilities@Seat,SeatingPossibilities@0]
+      } else
+      {
+         SeatingPair = [SeatingPossibilities@Seat,SeatingPossibilities@(Seat+1)]
+      }
+      // Determine total happiness.
+      CurrentHappiness = sum[[CurrentHappiness,SeatingPoints@SeatingPair]]
+   }
+   if CurrentHappiness > MaxHappiness
+   {
+      MaxHappiness = CurrentHappiness
+   }
+}
+
+// Print the answer
+println[MaxHappiness]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

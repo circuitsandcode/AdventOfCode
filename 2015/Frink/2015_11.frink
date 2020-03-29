@@ -1,0 +1,131 @@
+start = now[]
+
+// Import the input file using the read function. This will import the file into a single string.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+PasswordStarter = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_11_input.txt"]
+
+// Create a letter dictionary that skips i, l, o
+LetterIndex = new dict
+
+LetterIndex@"a"=1
+LetterIndex@"b"=2
+LetterIndex@"c"=3
+LetterIndex@"d"=4
+LetterIndex@"e"=5
+LetterIndex@"f"=6
+LetterIndex@"g"=7
+LetterIndex@"h"=8
+LetterIndex@"j"=9
+LetterIndex@"k"=10
+LetterIndex@"m"=11
+LetterIndex@"n"=12
+LetterIndex@"p"=13
+LetterIndex@"q"=14
+LetterIndex@"r"=15
+LetterIndex@"s"=16
+LetterIndex@"t"=17
+LetterIndex@"u"=18
+LetterIndex@"v"=19
+LetterIndex@"w"=20
+LetterIndex@"x"=21
+LetterIndex@"y"=22
+LetterIndex@"z"=23
+
+IndexLetter = LetterIndex.invert[]
+
+// Create functions
+ForbiddenChars[FCStr] :=
+{
+   // This replaces any unallowed characters in the password with what would be the next character in the cycle.
+   // Passwords may not contain the letters i, o, or l, as these letters can be mistaken for other characters and are therefore confusing.
+   FCStr =~ %s/(l)/m/g
+   FCStr =~ %s/(o)/p/g
+   FCStr =~ %s/(i)/j/g
+   return FCStr
+}
+
+// A function to check all rules
+RuleCheck[RCstr,RCLen] :=
+{
+   // Define functions for two rules.
+   // Variables used by first rule
+   charVals = chars[RCstr]
+   charValsLength = length[charVals]
+   
+   // Loop for first rule
+   // Passwords must include one increasing straight of at least three letters, like abc, bcd, cde, and so on, up to xyz. They cannot skip letters; abd doesn't count.
+   RC1 = false
+   for i = 0 to (RCLen - 3)
+   {
+      if charVals@i == (charVals@(i+1) - 1) && charVals@(i+1) == (charVals@(i+2) - 1)
+      {
+         RC1 = true
+         break
+      } else
+      {
+         RC1 = false
+      }
+   }
+   
+   // Regex for second Rule requiring two sets of two characters a-z (aa,bb,cc,etc)
+   // Passwords must include one increasing straight of at least three letters, like abc, bcd, cde, and so on, up to xyz. They cannot skip letters; abd doesn't count.
+   RC2 = RCstr =~ %r/([a-z])\1.*([a-z])\2/
+   if RC2 != undef && RC1 == true
+   {
+      return true
+      break
+   } else
+   {
+      return false
+   }
+}
+
+// Find and update any forbidden characters to the allowed character
+CurrentPassword = ForbiddenChars[PasswordStarter]
+
+// Loop to process the password and find the next valid one
+strPos = length[CurrentPassword]
+strLength = length[CurrentPassword]
+PWCounter = 0
+Counter = 0
+
+// Stop when two passwords have been found (Part I and Part II of problem).
+while PWCounter < 2
+{
+   Counter = Counter + 1
+   posVal = substr[CurrentPassword,strPos-1,strPos]
+   strnum = LetterIndex@posVal
+   if strnum == 23
+   {
+      // Start over from "a" if at the end of the dictionary.
+      charReplace = "a"
+   } else
+   {
+      // Move to the next letter in the dictionary.
+      strnum = strnum + 1
+      charReplace = IndexLetter@strnum
+   }
+   strStart = left[CurrentPassword,strPos-1]
+   strEnd = right[CurrentPassword,(strLength-strPos)]
+   
+   newStr = strStart + charReplace + strEnd
+   // Use the Rule check function
+   StrRC = RuleCheck[newStr,strLength]
+   if StrRC == true
+   {
+      println["New password is " + newStr + ". Identified on Counter #" + Counter]
+      PWCounter = PWCounter + 1
+   }
+   CurrentPassword = newStr
+   if charReplace == "a"
+   {
+      // Move to the previous character if all letters have been looped through.
+      strPos = strPos-1
+   } else
+   {
+      strPos = strLength
+   }
+}
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
