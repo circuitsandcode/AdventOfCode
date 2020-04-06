@@ -1,0 +1,73 @@
+start = now[]
+
+// Read the Aunt Sue input file
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+AuntSueArray = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_16_input.txt"]
+// Sample record for reference
+//Sue 1: goldfish: 9, cars: 0, samoyeds: 9
+
+// Add MFCSAM (My First Crime Scene Analysis Machine) results to a dictionary
+tickerTape = new dict
+
+tickerInput = "children: 3 cats: 7 samoyeds: 2 pomeranians: 3 akitas: 0 vizslas: 0 goldfish: 5 trees: 3 cars: 2 perfumes: 1" // Copied from problem text
+tickerRegex = tickerInput =~ %r/\s?(\w*):\s(\d*)/g // Import the values into an array
+
+for tickerItem = tickerRegex
+{
+   itemVal = parseInt[tickerItem@1] // The number
+   itemName = tickerItem@0 // The item name
+   tickerTape@itemName = itemVal // Add Name Value pair to the dictionary
+}
+
+for AuntSue = AuntSueArray
+{
+   // Get Current Aunt Sue's Number - Regex grabs digit immediately after "Sue"
+   SueNumVal = AuntSue =~ %r/^Sue\s(\d+):/
+   SueNum = parseInt[SueNumVal@0] // Convert the string number to an int
+
+   // Get Aunt Sue Values // Regex captures each word: digit pair
+   AuntSueProperties = AuntSue =~ %r/\s?(\w+):\s(\d+),?/g
+
+   // Loop through each Sue and identify which one matches the properties of Ticker Tape
+   AuntSueCheck = 1 // This will be set to 0 if all three Aunt Sue properties don't match.
+   for AuntSueProperty = AuntSueProperties
+   {
+      AuntSuePropertyName = AuntSueProperty@0
+      AuntSuePropertyVal = parseInt[AuntSueProperty@1]
+
+      /* PART II */ // Comment this section out for Part I
+      if AuntSuePropertyName == "cats" || AuntSuePropertyName == "trees" // Special rules for cats and trees
+      {
+         if tickerTape@AuntSuePropertyName >= AuntSuePropertyVal // Value must be less than the ticker tape
+         {
+            AuntSueCheck = 0
+            break // Skip to the next Aunt Sue if this doesn't match. No value in comparing the other properties.
+         }
+         next // Skip the rest of the loop if this matched. This will prevent the != comparison from running since it doesn't apply to the Part II special rules.
+      }
+      if AuntSuePropertyName == "pomeranians" || AuntSuePropertyName == "goldfish" // Special rules for pomeranians and goldfish
+      {
+         if tickerTape@AuntSuePropertyName <= AuntSuePropertyVal // Value must be greater than the ticker tape
+         {
+            AuntSueCheck = 0
+            break 
+         }
+         next
+      }
+      /* END PART II */
+      if tickerTape@AuntSuePropertyName != AuntSuePropertyVal
+      {
+         AuntSueCheck = 0
+         break // Skip to the next Aunt Sue if this doesn't match. No value in comparing the other properties.
+      }
+   }
+   if AuntSueCheck == 1
+   {
+      println["The Aunt Sue who gave the gift is #$SueNum"]
+      break // End the loop through the AuntSueArray. We've identified who gave us the gift so no need to evaluate further.
+   }
+}
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
