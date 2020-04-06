@@ -2,7 +2,7 @@ start = now[]
 
 // Import the input file using the lines function. This will import the file into an array.
 // The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
-FlightDetails = lines["file:///C:/AdventOfCode/2015/2015_14_input.txt"]
+FlightDetails = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_14_input.txt"]
 
 RestingDict = new dict
 FlyingSpeedDict = new dict
@@ -52,6 +52,7 @@ for racetime = 1 to 2503
 }
 
 // Printing all reindeer times just for fun.
+maxDistance = 0
 for DistanceKey = keys[ReindeerDistance]
 {
    println[DistanceKey + " - " + ReindeerDistance@DistanceKey]

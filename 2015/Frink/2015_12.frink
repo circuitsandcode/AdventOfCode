@@ -2,7 +2,7 @@ start = now[]
 
 // Import the input file using the read function. This will import the file into a single string.
 // The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
-str = read["file:///C:/AdventOfCode/2015/2015_12_input.txt"]
+str = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_12_input.txt"]
 
 // Part I
 // Use regex to look for all integers (positive and negative) in the imported string.
