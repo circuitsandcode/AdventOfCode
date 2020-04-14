@@ -1,0 +1,45 @@
+// Solution for 2015 Day 17: No Such Thing as Too Much
+// https://adventofcode.com/2015/day/17
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+
+start = now[]
+// Read the Eggnog container input file
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+ContainerStrings = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_17_input.txt"]
+ContainerInts = mapList["parseInt",ContainerStrings]
+
+
+ContainerCount = 0
+minCheck = 1 // Used in Part II
+minContainerCount = 0 // Used in Part II
+
+for i = 1 to length[ContainerInts]
+{
+   // Divide the contains into all possible combinations for the current itteration.
+   // i.e. When i is 3, This will divide the containers into all possible groups of 3.
+   ContainerCombos = ContainerInts.combinations[i]
+   for Containers = ContainerCombos
+   {
+      // If the total volume of containers is 150, increase the count by 1.
+      if sum[Containers] == 150
+         ContainerCount = ContainerCount + 1
+   }
+   // If minCheck is still 1 and the ContainerCount has a value, set the minContainerCount equal to the current ContainerCount
+   if minCheck == 1 && ContainerCount > 0
+   {
+      minContainerCount = ContainerCount
+      // Set the minCheck to 0 to prevent this block from running again
+      minCheck = 0
+   }
+}
+
+println["Total Container Combinations: $ContainerCount"] // Part I Answer
+println["Total possible ways to fill the minimum number of containers: $minContainerCount"] // Part II Answer
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
