@@ -4,15 +4,15 @@
 // Website: https://circuitsandcode.wehappyfew.net/
 // Twitter: https://twitter.com/CircuitsAndCode
 // Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
 
 start = now[]
-// Read the Eggnog container input file
 
+// Read the Eggnog container input file
 // Import the input file using the lines function. This will import the file into an array.
 // The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
 ContainerStrings = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_17_input.txt"]
 ContainerInts = mapList["parseInt",ContainerStrings]
-
 
 ContainerCount = 0
 minCheck = 1 // Used in Part II
