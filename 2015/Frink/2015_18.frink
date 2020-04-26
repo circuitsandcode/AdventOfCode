@@ -1,0 +1,165 @@
+// Solution for 2015 Day 18: Like a GIF For Your Yard
+// https://adventofcode.com/2015/day/18
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+instructions = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_18_input.txt"]
+
+rowCounter = 0
+display = new dict
+
+// Loop through the instructions.
+for instructionStr = instructions
+{
+   rowCounter = rowCounter + 1
+   columnCounter = 0
+   // Break the string into individual characters to be looped through.
+   instructionArr = charList[instructionStr]
+   for instruction = instructionArr
+   {
+      columnCounter = columnCounter + 1
+      arr = [rowCounter,columnCounter]
+      // Convert the symbols within the string to 1s and 0s so they can be summed at the end of the problem.
+      if instruction == "#"
+         display@arr = 1
+      else
+         display@arr = 0
+   }
+}
+
+// Part 2 - Comment out this block to run part I
+// Add logic for the changes to the corners.
+corners = [[1,1],[100,1],[1,100],[100,100]]
+for corner = corners
+{
+   display@corner = 1
+}
+// End Part 2 Change
+
+// Set a toggle dictionary to store the light changes.
+toggle = new dict
+multifor[x,y] = [new range[1,100],new range[1,100]]
+{
+   arr = [x,y]
+   toggle@arr = 0
+}
+
+// Bonus Animation
+// If you would like to turn the output of the code into an animation showing each phase of the loop, this code will output a gif but will increase the run time.
+// The necessary animation pieces are commented out for now but clearly labeled as "Bonus Animation" so you can turn them back on if you'd like.
+/*
+a = new Animation[15/s]
+win = undef
+*/
+
+// The solution requires the output at the end of 100 iterations.
+for i = 1 to 100
+{
+   // Bonus Animation
+   /*
+   g = new graphics
+   g.backgroundColor[1,1,1]
+   */
+   
+   // Loop through every element of the grid.
+   multifor[x1,y1] = [new range[1,100],new range[1,100]]
+   {
+      // tval is togglevalue
+      tval = [x1,y1]
+
+      // min and max logic to account for edges.
+      xmax = min[x1+1,100]
+      xmin = max[x1-1,1]
+      ymax = min[y1+1,100]
+      ymin = max[y1-1,1]
+
+      // Set the range of the surrounding lights.
+      lightsx = new range[xmin,xmax]
+      lightsy = new range[ymin,ymax]
+
+      // Starting values for sums and status.
+      lightsum = 0
+      status = 0
+
+      // Loop through the surrounding lights.
+      multifor[x2,y2] = [lightsx,lightsy]
+      {
+         lights = [x2,y2]
+         // Capture the status of the current light bulb (from the outside multifor loop).
+         if x2 == x1 && y2 == y1
+         {
+            status = display@lights
+         } else
+         {
+            // Add the values of the surrounding lights to the lightsum variable.
+            lightsum = lightsum + display@lights
+         }
+      }
+
+      // Bonus Animation
+      /*
+      if status == 1
+      {
+         g.color[0,0,0]
+         g.fillEllipseCenter[x1,y1,1,1]
+      }
+      */
+
+      // Set the starting toggle value. (This will be overwritten if needed by conditions below.)
+      toggle@tval = status
+
+      // Turn light on if 3 neighboring lights are on.
+      if status == 0 && lightsum == 3
+      {
+         toggle@tval = 1
+      }
+      // Turn light off if less than 2 or more than 3 neighboring lights are on.
+      if status == 1 && (lightsum < 2 || lightsum > 3)
+      {
+         toggle@tval = 0
+      }
+
+      // Part 2 - Comment out this block to run part I
+      if (x1 == 1 && y1 == 1) || (x1 == 100 && y1 == 1) || (x1 == 1 && y1 == 100) || (x1 == 100 && y1 == 100)
+      {
+         toggle@tval = 1
+      }
+      // End Part 2 Change
+   }
+
+   // Bonus Animation
+   /*
+   a.add[g]
+   */
+
+   // Loop through toggle values and update the display with the new values.
+   for toggleKeys = keys[toggle]
+   {
+      //tval = [x1,y1]
+      val = toggle@toggleKeys
+      display@toggleKeys = val
+   }
+}
+
+// After 100 iterations, loop through the display and total the number of lights that are on.
+displaySum = 0
+for displayKeys = keys[display]
+{
+   displaySum = displaySum + display@displayKeys
+}
+
+// Bonus Animation
+/*
+a.write["FrinkAnimationGoL.gif",400,400]
+*/
+
+println["Total lights on are $displaySum"]
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

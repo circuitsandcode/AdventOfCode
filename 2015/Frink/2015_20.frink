@@ -1,0 +1,65 @@
+// Solution for 2015 Day 20: Infinite Elves and Infinite Houses
+// https://adventofcode.com/2015/day/20
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Import the input file using the read function. This will import the file into a single string.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+HousePresentsStr = read["file:../Projects/AdventOfCode/2015/InputFiles/2015_20_input.txt"]
+HousePresentsGoal = parseInt[HousePresentsStr]
+
+houses = new dict
+
+// Setting an upper threshold. Could be written as a while as well.
+maxLoop = 1000000
+
+OUTERLOOP:
+for elf = 1 to maxLoop step 1
+{
+   presents = elf * 10
+   for house = elf to maxLoop step elf
+   {
+      // Add the total number of presents to the current house.
+      houses.increment[house,presents]
+      if houses@house >= HousePresentsGoal
+      {
+         println["The first house to get at least $HousePresentsGoal presents is $house"]
+         break OUTERLOOP
+      }
+   }
+}
+
+// Part II
+// Start with an empty houses dictionary.
+houses.clear[]
+
+ELFLOOP:
+for elf = 1 to maxLoop step 1
+{
+   houseCounter = 0
+   presents = elf * 11
+   HOUSELOOP:
+   for house = elf to maxLoop step elf
+   {
+      houses.increment[house,presents]
+      if houses@house >= HousePresentsGoal
+      {
+         println["The first house to get at least $HousePresentsGoal presents in Part II is $house"]
+         break ELFLOOP
+      }
+      houseCounter = houseCounter + 1
+      // The elf will stop delivering after 50 houses.
+      if (houseCounter == 50)
+      {
+         break HOUSELOOP
+      }
+   }
+}
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

@@ -1,0 +1,115 @@
+// Solution for 2015 Day 19: Medicine for Rudolph
+// https://adventofcode.com/2015/day/19
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Create a dictionary to store the possible replacement molecules
+replacementDict = new dict
+moleculeVals = new array
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+moleculesArray = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_19_input.txt"]
+
+// Get Each molucule replacement pair. Regex captures each word => word pair
+for molecules = moleculesArray
+{
+   moleculeValues = molecules =~ %r/^(\w+)\s=>\s(\w+)$/g
+   if (length[moleculeValues] > 0)
+   {
+      // Convert the Enumerating Expression values from the Regex into an Array
+      moleculeValue = toArray[moleculeValues]
+      // Add the results to the replacement molecule dictionary
+      replacementDict.addToList[moleculeValue@0@0,moleculeValue@0@1]
+   }
+}
+
+moleculeString = ""
+
+// Get our starting molecule
+for molecules = moleculesArray
+{
+   // Return only values where there is a single line of text with no spaces or special characters.
+   moleculeValues = molecules =~ %r/^(\w+)$/
+   if(moleculeValues != undef)
+   {
+      moleculeValue = toArray[moleculeValues]
+      moleculeString = toString[moleculeValue@0]
+      println["Starting molecule is $moleculeString"]
+      moleculeSepE = moleculeString =~ %r/([e|A-Z][a-df-z]?)/g
+      moleculeVals = flatten[moleculeSepE]
+   }
+}
+
+possibleMeds = new set
+
+arrayCounter = 0
+for moleculeVal = moleculeVals
+{
+   tempVals = moleculeVals.shallowCopy[]
+   tempReplacementArray = replacementDict@moleculeVal
+   for tempReplacementVal = tempReplacementArray
+   {
+      tempVals@arrayCounter = tempReplacementVal
+      tempMolecule = join["",tempVals]
+      if possibleMeds.contains[tempMolecule] == false
+      {
+         possibleMeds.put[tempMolecule]
+      }
+   }
+   arrayCounter = arrayCounter + 1
+}
+
+// Part I
+println["Total possible molecules is " + length[possibleMeds]]
+
+// Part II
+// Change the dictionary to show replacement as the key and the original value as the changed value. That way we can go backwards.
+reverseReplacementDict = new dict
+for replacementKey = keys[replacementDict]
+{
+   for replacementVal = replacementDict@replacementKey
+   {
+      reverseReplacementDict@replacementVal = replacementKey
+   }
+}
+
+counter = 0
+reverseReplacement = toArray[keys[reverseReplacementDict]]
+
+// Keep Looping through until the value of the molecule is "e"
+for i = 1 to 10000
+{
+   if (moleculeString == "e")
+      break
+      // Pick a random value from the dictionary keys to check.
+      reverseKey = random[reverseReplacement]
+      reverseKeyStr = toString[reverseKey]
+      moleculePos = indexOf[moleculeString,reverseKeyStr]
+      if (moleculePos == -1)
+      {
+         next
+      } else
+      {
+         reverseReplaceLength = length[reverseKey]
+         moleculeLength = length[moleculeString]
+         moleculeEndPortionStart = moleculePos + reverseReplaceLength // Position of second substring is immediately after the matched portion
+         moleculeEndPortionLength = moleculeLength - moleculeEndPortionStart
+         moleculeStart = substrLen[moleculeString,0,moleculePos]
+         moleculeEnd = substrLen[moleculeString,moleculeEndPortionStart,moleculeEndPortionLength]
+         counter = counter + 1
+         moleculeString = moleculeStart + reverseReplacementDict@reverseKey + moleculeEnd
+      }
+}
+
+// Because of the random choice above, this script occasionally gets to a path where the molecule cannot go all the way to "e". Check the final value output below to make sure it did. If not, just run it again.
+println["Ending molecule is: $moleculeString"]
+println["Total steps to form starting molecule from e is: $counter"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
