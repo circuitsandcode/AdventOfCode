@@ -1,0 +1,86 @@
+// Solution for 2015 Day 23: Opening the Turing Lock
+// https://adventofcode.com/2015/day/23
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Instructions for reference.
+/*
+hlf r sets register r to half its current value, then continues with the next instruction.
+tpl r sets register r to triple its current value, then continues with the next instruction.
+inc r increments register r, adding 1 to it, then continues with the next instruction.
+jmp offset is a jump; it continues with the instruction offset away relative to itself.
+jie r, offset is like jmp, but only jumps if register r is even ("jump if even").
+jio r, offset is like jmp, but only jumps if register r is 1 ("jump if one", not odd).
+*/
+
+// Functions for Turing Lock instructions
+// Each takes identical parameter  and returns an identical array so that each can be called by the same eval[] function.
+hlf[currentPointer,register,jumpPointer] := [register/2,currentPointer+1]
+tpl[currentPointer,register,jumpPointer] := [register*3,currentPointer+1]
+inc[currentPointer,register,jumpPointer] := [register+1,currentPointer+1]
+jmp[currentPointer,register,jumpPointer] := [undef,currentPointer+jumpPointer]
+jie[currentPointer,register,jumpPointer] := register % 2 == 0 ? [register,currentPointer + jumpPointer] : [register,currentPointer + 1]
+jio[currentPointer,register,jumpPointer] := register == 1 ? [register,currentPointer + jumpPointer] : [register,currentPointer + 1]
+
+// Capture register instructions from input file
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+InstructionsStrArr = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_23_input.txt"]
+
+Instructions = new array
+counter = 0
+
+InstructionsRegister = ["hlf","tpl","inc"]
+InstructionsRegisterJump = ["jie","jio"]
+
+InstructDetail = new dict
+for InstructionsStr = InstructionsStrArr
+{
+   InstructDetail.clear[]
+   InstructionsReg = InstructionsStr =~ %r/^(hlf|tpl|inc|jmp|jie|jio)\s([ab])?,?\s?([\-\+])?([1-9]*)$/
+   InstructionsArr = flatten[toArray[InstructionsReg]]
+   InstructDetail@"Function" = InstructionsArr@0
+   InstructDetail@"Register" = InstructionsArr@1
+   InstructDetail@"Pointer" = parseInt[InstructionsArr@2 + InstructionsArr@3]
+   Instructions@counter = deepCopy[InstructDetail]
+   counter = counter +1
+}
+
+// Create registers dictionary
+Registers = new dict
+Registers@"a" = 0
+Registers@"b" = 0
+// PART II // Uncomment the line below to execute part II
+// Registers@"a" = 1
+
+// Turing Lock evaluator with While Loop
+
+TuringContinue = true
+InstructionPointer = 0
+while TuringContinue
+{
+   evalFunction = Instructions@InstructionPointer@"Function"
+   evalRegister = Instructions@InstructionPointer@"Register"
+   evalRegisterVal = Registers@evalRegister
+   evalPointer = Instructions@InstructionPointer@"Pointer"
+   [resultRegister,resultPointer] = eval["$evalFunction[InstructionPointer,evalRegisterVal,evalPointer]"]
+   // New Register Value
+   if evalRegister != undef
+      Registers@evalRegister = resultRegister
+
+   // New Pointer Value
+   InstructionPointer = resultPointer
+   if InstructionPointer >= length[Instructions] || InstructionPointer <= 0
+      TuringContinue = false
+}
+
+println["Register a is " + Registers@"a"]
+println["Register b is " + Registers@"b"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

@@ -1,0 +1,157 @@
+// Solution for 2015 Day 21: RPG Simulator 20XX
+// https://adventofcode.com/2015/day/21
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+BossValuesStr = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_21_input.txt"]
+
+BossValues = new dict
+
+for BossValueLine = BossValuesStr
+{
+   // Divide the input file into the label (before the colon) and value (after the colon).
+   BossValuesArr = BossValueLine =~ %r/^(.+):\s(\d+)$/g
+   // Convert the Enumerating Expression values from the Regex into an Array. Flatten to remove surrounding array.
+   BossValue = flatten[toArray[BossValuesArr]]
+   BossValueName = BossValue@0
+   // Add the results to the BossValue dictionary
+   BossValues@BossValueName = parseInt[BossValue@1]
+}
+
+// Set Player starting values. These are provided in the problem.
+PlayerValues = new dict
+PlayerValues@"Hit Points" = 100
+PlayerValues@"Damage" = 0
+PlayerValues@"Armor" = 0
+
+// Three Dictionaries used for items
+Weapons = new dict
+Armor = new dict
+Rings = new dict
+
+// Key names used for each item
+ItemAttributesKeys = ["Cost","Damage","Armor"]
+
+// Capture all item values into appropriate dictionaries
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+StoreItemsStr = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_21_items_input.txt"]
+
+for StoreItemLine = StoreItemsStr
+{
+   // Skip Blank Lines
+   if StoreItemLine =~ %r/^$/
+   {
+      next
+   }
+   // If the line has no digit, it is a category title
+   if !(StoreItemLine =~ %r/\d/)
+   {
+      // Regex pattern to match the format of the category title (i.e. "Armor:      Cost  Damage  Armor") - all we care about is the first word.
+      categoryArr = StoreItemLine =~ %r/^(\w+):/
+      category = categoryArr@0 // Get value out of array format
+      // Create values for "None" and add them to the dictionary so that we can include not using the object in our loops.
+      ItemValues = [0,0,0]
+      if category == "Armor"
+      {
+         Armor@"None" = new dict[ItemAttributesKeys,ItemValues]
+      }
+      if category == "Rings"
+      {
+         Rings@"Left None" = new dict[ItemAttributesKeys,ItemValues]
+         Rings@"Right None" = new dict[ItemAttributesKeys,ItemValues]
+      }
+   } else // If the line has a digit, it is an item description
+   {
+      // Regex pattern to match the format of the item's description (i.e. "Chainmail    31     0       2")
+      itemsArr = StoreItemLine =~ %r/^(.+)\s{2,}(\d+)\s+(\d+)\s+(\d+)/
+      // First item in the regex result is the item name
+      ItemName = trim[itemsArr@0]
+      // Cost, Damage, and Armor are taken from the array and turned into integers for later math functions.
+      ItemValues = [parseInt[itemsArr@1],parseInt[itemsArr@2],parseInt[itemsArr@3]]
+      // For each category, load the appropriate dictionary with a new dictionary for each item name.
+      if category == "Weapons"
+      {
+         Weapons@ItemName = new dict[ItemAttributesKeys,ItemValues]
+      }
+      if category == "Armor"
+      {
+         Armor@ItemName = new dict[ItemAttributesKeys,ItemValues]
+      }
+      if category == "Rings"
+      {
+         Rings@ItemName = new dict[ItemAttributesKeys,ItemValues]
+      }
+   }
+}
+
+// A recrusive function for fighting the boss.
+fight[playerHealth,playerDamage,playerArmor,bossHealth,bossDamage,bossArmor] :=
+{
+   // Player always attacks first. Determine the result of player's hit on the boss.
+   DamageVsArmor = playerDamage - bossArmor
+   BossFightHealthLost = max[1,DamageVsArmor]
+   bossNewHealth = bossHealth - BossFightHealthLost
+   // If the boss is still alive, it will attack the player.
+   if bossNewHealth > 0
+   {
+      DamageVsArmor = bossDamage - playerArmor
+      playerFightHealthLost = max[1,DamageVsArmor]
+      playerNewHealth = playerHealth - playerFightHealthLost
+   } else
+   {
+      playerNewHealth = playerHealth
+   }
+   // Recrusive function, if both players are still alive, the function is called again with the new values.
+   if playerNewHealth > 0 && bossNewHealth > 0
+   {
+      fight[playerNewHealth,playerDamage,playerArmor,bossNewHealth,bossDamage,bossArmor]
+   } else // If one player is dead, return the fight results.
+   {
+      if playerNewHealth > 0 && bossNewHealth <= 0
+         return "Player Wins!"
+      else
+         return "Boss Wins!"
+   }
+}
+
+// Assign starting values to the variables tracking the min and max gold spent.
+minCost = 1000 // Random high value to compare against
+maxCost = 0 // Used in Part II
+
+// Loop through each combination of items
+multifor[WeaponItem,ArmorItem,LeftRingItem,RightRingItem] = [keys[Weapons],keys[Armor],keys[Rings],keys[Rings]]
+{
+   if LeftRingItem == RightRingItem
+   {
+      next
+   }
+   assortmentCost = Weapons@WeaponItem@"Cost" + Armor@ArmorItem@"Cost" + Rings@LeftRingItem@"Cost" + Rings@RightRingItem@"Cost"
+   // Set the player values with the current assorment of purchased items.
+   PlayerValues@"Damage" = Weapons@WeaponItem@"Damage" + Armor@ArmorItem@"Damage" + Rings@LeftRingItem@"Damage" + Rings@RightRingItem@"Damage"
+   PlayerValues@"Armor" = Weapons@WeaponItem@"Armor" + Armor@ArmorItem@"Armor" + Rings@LeftRingItem@"Armor" + Rings@RightRingItem@"Armor"
+   // Run the fight function using the current player Values.
+   fightResult = fight[PlayerValues@"Hit Points",PlayerValues@"Damage",PlayerValues@"Armor",BossValues@"Hit Points",BossValues@"Damage",BossValues@"Armor"]
+   // Determine min and max gold spend based on results.
+   if fightResult == "Player Wins!"
+   {
+      minCost = min[minCost,assortmentCost]
+   }
+   if fightResult == "Boss Wins!" // Part II
+   {
+      maxCost = max[maxCost,assortmentCost]
+   }
+}
+
+println["The minimum amount of gold you can spend and still win the fight is $minCost"]
+println["The maximum amount of gold you can spend and still lose the fight is $maxCost"] // Part II
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

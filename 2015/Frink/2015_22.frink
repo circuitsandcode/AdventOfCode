@@ -1,0 +1,239 @@
+// Solution for 2015 Day 22: Wizard Simulator 20XX
+// https://adventofcode.com/2015/day/22
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+// This might be one of the ugliest programs I've written so far for Advent of Code. It went through many itterations and I didn't go back to clean up. But it works and runs in about two seconds so I'm calling it good.
+
+start = now[]
+
+// Capture Boss starting values from input file
+BossValues = new dict
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+BossValuesStr = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_22_input.txt"]
+
+for BossVal = BossValuesStr
+{
+   BossValuesArr = BossVal =~ %r/^(\b\w+\s?\w+\b):\s(\d+)$/
+   // Convert the Enumerating Expression values from the Regex into an Array. Flatten to remove surrounding array.
+   BossValue = flatten[toArray[BossValuesArr]]
+   BossValueName = BossValue@0
+   // Add the results to the BossValue dictionary
+   BossValues@BossValueName = parseInt[BossValue@1]
+}
+
+// Set Player starting values
+PlayerValues = new dict
+PlayerValues@"Hit Points" = 50
+PlayerValues@"Damage" = 0
+PlayerValues@"Armor" = 0
+PlayerValues@"Mana" = 500
+PlayerValues@"Current Spend" = 0
+PlayerValues@"History" = []
+
+/*
+Spell Text from problem - copied for reference
+Magic Missile costs 53 mana. It instantly does 4 damage.
+Drain costs 73 mana. It instantly does 2 damage and heals you for 2 hit points.
+Shield costs 113 mana. It starts an effect that lasts for 6 turns. While it is active, your armor is increased by 7.
+Poison costs 173 mana. It starts an effect that lasts for 6 turns. At the start of each turn while it is active, it deals the boss 3 damage.
+Recharge costs 229 mana. It starts an effect that lasts for 5 turns. At the start of each turn while it is active, it gives you 101 new mana.
+*/
+
+// Spells with EFFECT apply only at start of turn
+// They are used on both the wizard and boss turn
+
+// Set Spells Dictionary values
+// Adding in a column to track if the spell has an immediate impact or an effect that plays out over multiple turns
+Spells = new dict
+AttributeKeys = ["Cost","Damage","Armor","Timer","Heal","Mana Increase"]
+
+// Magic Missile Spell
+AttributeValues = [53,4,0,1,0,0]
+Spells@"Magic Missile" = new dict [AttributeKeys,AttributeValues]
+
+// Drain Spell
+AttributeValues = [73,2,0,1,2,0]
+Spells@"Drain" = new dict [AttributeKeys,AttributeValues]
+
+// Shield Spell
+AttributeValues = [113,0,7,6,0,0]
+Spells@"Shield" = new dict [AttributeKeys,AttributeValues]
+
+// Poison Spell
+AttributeValues = [173,3,0,6,0,0]
+Spells@"Poison" = new dict [AttributeKeys,AttributeValues]
+
+// Recharge Spell
+AttributeValues = [229,0,0,5,0,101]
+Spells@"Recharge" = new dict [AttributeKeys,AttributeValues]
+
+// All Spells
+// SpellNames = ["Magic Missile","Drain","Shield","Poison","Recharge"]
+
+// Set Starting Values
+CurrentPlayerValues = new dict
+CurrentBossValues = new dict
+
+// Set Active Spells Starting Value of 0 for each spell
+ActiveSpells = new dict
+//for SpellName = SpellNames
+for SpellName = keys[Spells]
+{
+   ActiveSpells@SpellName = 0
+}
+
+// Array to capture minimum amounts. Starting with a high value to compare minimum values against.
+// Using an array since it is passed to the function by reference so updates within the function will apply.
+minManaArr = new array
+minManaArr@0 = 1000000
+
+WizardBossBattle[Spells,CurrentPlayerValues,CurrentBossValues,ActiveSpells,manaArr] :=
+{
+   // Loop through each available spell until either the wizard or the boss is dead
+   SPELL_LOOP:
+   for SpellCast = keys[Spells]
+   {
+      ACTIVESPELL_LOOP:
+      for ActiveSpell = keys[ActiveSpells]
+      {
+         // If the chosen spell is already active, skip to the next spell in the list. Spells can be recharged if they only have one use left
+         if SpellCast == ActiveSpell && ActiveSpells@ActiveSpell > 1
+         {
+            next SPELL_LOOP
+         }
+      }
+      // If the spell is too expensive to buy, move on to the next one.
+      if Spells@SpellCast@"Cost" > CurrentPlayerValues@"Mana"
+      {
+         next
+      }
+
+      CurrentBossValuesCopy = deepCopy[CurrentBossValues]
+      CurrentPlayerValuesCopy = deepCopy[CurrentPlayerValues]
+      ActiveSpellsCopy = deepCopy[ActiveSpells]
+
+      // WIZARD'S TURN
+
+      /*
+      // Uncomment this block to run PART II
+      // PART II Only - Adjust hit point for player at start of player's turn
+      CurrentPlayerValuesCopy@"Hit Points" = CurrentPlayerValuesCopy@"Hit Points" - 1
+      if CurrentPlayerValuesCopy@"Hit Points" <= 0
+      {
+         next
+      }
+      // End PART II - Players's Turn
+      */
+
+      // Update History -- You can use this dictionary item to check the current spells that have been cast in this iteration.
+      CurrentPlayerValuesCopy@"History".push[SpellCast]
+
+      // Pay the mana required for the spell cast
+      CurrentPlayerValuesCopy@"Mana" = CurrentPlayerValuesCopy@"Mana" - Spells@SpellCast@"Cost"
+      // Track amount spend in the current itteration
+      CurrentPlayerValuesCopy@"Current Spend" = CurrentPlayerValuesCopy@"Current Spend" + Spells@SpellCast@"Cost"
+
+      // Start the timer for whatever spell was just cast. Add to the current value because a spell at 1 can be used again in the current turn.
+      ActiveSpellsCopy@SpellCast = ActiveSpellsCopy@SpellCast + Spells@SpellCast@"Timer"
+
+      // Active Spell Bonuses variables
+      ActiveDamangeBonus = 0
+      ActiveArmorBonus = 0
+
+      // Set active spells value adjustments for Wizard turn
+      // This probably could have been a function since I use it again for the wizard turn, but I'm too lazy right now.
+      // Reduce the timer for each active spell and adjust values for active bonuses
+      ADJUST_LOOP:
+      for ActiveSpellKey = keys[ActiveSpellsCopy]
+      {
+         if ActiveSpellsCopy@ActiveSpellKey > 0
+         {
+            // Adjust all round bonuses and dictionary values for active spells
+            // Spells with a duration effect are only used at the start of the turn they are cast unless they were on their last turn already (in which case they would be one higher than the original timer since it is added.)
+            if ActiveSpellKey == SpellCast && ActiveSpellsCopy@ActiveSpellKey == Spells@SpellCast@"Timer"
+            {
+               next ADJUST_LOOP
+            }
+            ActiveDamangeBonus = ActiveDamangeBonus + Spells@ActiveSpellKey@"Damage"
+            ActiveArmorBonus = ActiveArmorBonus + Spells@ActiveSpellKey@"Armor"
+            CurrentPlayerValuesCopy@"Mana" = CurrentPlayerValuesCopy@"Mana" + Spells@ActiveSpellKey@"Mana Increase"
+            CurrentPlayerValuesCopy@"Hit Points" = CurrentPlayerValuesCopy@"Hit Points" + Spells@ActiveSpellKey@"Heal"
+
+            // Reduce the ActiveSpellsCopy Timer
+            ActiveSpellsCopy@ActiveSpellKey = ActiveSpellsCopy@ActiveSpellKey - 1
+         }
+      }
+
+      // Apply current wizard damage to Boss
+      CurrentBossValuesCopy@"Hit Points" = CurrentBossValuesCopy@"Hit Points" - ActiveDamangeBonus
+
+      // BOSS's TURN
+
+      // Lots of reused code below. Would have been better as a function or class, but I misread original requirements and did some ugly fixing.	  
+      // Set active spells value adjustments for Boss turn
+      // Active Spell Bonuses variables
+      ActiveDamangeBonus = 0
+      ActiveArmorBonus = 0
+
+      // Reduce the timer for each active spell and adjust values for active bonuses
+      // This will only use spells currently with an effect since the immediate use ones were used up in the similar function above.
+      for ActiveSpellKey = keys[ActiveSpellsCopy]
+      {
+         if ActiveSpellsCopy@ActiveSpellKey > 0
+         {
+            // Adjust all round bonuses and dictionary values for active spells
+            ActiveDamangeBonus = ActiveDamangeBonus + Spells@ActiveSpellKey@"Damage"
+            ActiveArmorBonus = ActiveArmorBonus + Spells@ActiveSpellKey@"Armor"
+            CurrentPlayerValuesCopy@"Mana" = CurrentPlayerValuesCopy@"Mana" + Spells@ActiveSpellKey@"Mana Increase"
+            CurrentPlayerValuesCopy@"Hit Points" = CurrentPlayerValuesCopy@"Hit Points" + Spells@ActiveSpellKey@"Heal"
+
+            // Reduce the ActiveSpellsCopy Timer
+            ActiveSpellsCopy@ActiveSpellKey = ActiveSpellsCopy@ActiveSpellKey - 1
+         }
+      }
+
+      // Apply current wizard effect damage to Boss
+      CurrentBossValuesCopy@"Hit Points" = CurrentBossValuesCopy@"Hit Points" - ActiveDamangeBonus
+
+
+      // If the boss is dead, then computer the Min Spend and move on to the next round
+      if CurrentBossValuesCopy@"Hit Points" <= 0 && CurrentPlayerValuesCopy@"Current Spend" < manaArr@0
+      {
+         return CurrentPlayerValuesCopy@"Current Spend"
+      }
+      // If the boss is still alive and the current spend is still less than the minimum spend in manaArr, continue to the boss's turn. Otherwise, skip back to the previous itteration.
+      if CurrentBossValuesCopy@"Hit Points" <= 0 && CurrentPlayerValuesCopy@"Current Spend" > manaArr@0
+      {
+         next
+      }
+
+      // If the boss is still alive, calculate its hit on the wizard
+      CurrentPlayerValuesCopy@"Hit Points" = CurrentPlayerValuesCopy@"Hit Points" - max[1,(CurrentBossValuesCopy@"Damage" - ActiveArmorBonus)]
+
+      // If wizard survived move on to next set of instructions
+      if CurrentPlayerValuesCopy@"Hit Points" > 0 && CurrentPlayerValuesCopy@"Current Spend" < manaArr@0
+      {
+         // Next itteration of recursive function
+         nextRound = WizardBossBattle[Spells,CurrentPlayerValuesCopy,CurrentBossValuesCopy,ActiveSpellsCopy,manaArr]
+
+         if isInteger[nextRound] // If no value is returned, this data type will be a special type "Void" - In this case a time where the wizard could afford no spells or the wizard died. Void cannot be compared in a min statement
+         {
+            manaArr@0 = min[nextRound,manaArr@0]
+         }
+      }
+   }
+}
+
+// Kick off the recursive function
+WizardBossBattle[Spells,PlayerValues,BossValues,ActiveSpells,minManaArr]
+
+println["The minimum amount of man spent was " + minManaArr@0]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

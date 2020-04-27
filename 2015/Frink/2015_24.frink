@@ -1,0 +1,93 @@
+// Solution for 2015 Day 24: It Hangs in the Balance
+// https://adventofcode.com/2015/day/24
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+packagesStr = lines["file:../Projects/AdventOfCode/2015/InputFiles/2015_24_input.txt"]
+packages = map["parseInt",packagesStr] // lines reads in as strings. Convert to numbers.
+
+// Weight variables
+packagesWeight = sum[packages]
+split = 3
+// PART II - Uncomment the line below for Part II
+//split = 4
+equalWeight = packagesWeight / split
+
+println["equalWeight is $equalWeight"]
+println["type of equalWeight is " + type[equalWeight]]
+
+// function to calculate the min and combination size. Helps to skip unnecessary steps.
+sizeCalc[arrS,goalS,loopsRemaining] :=
+{
+   arrSize = length[arrS]
+   minSize = sum[arrS]
+   minVal = 0
+   maxGoal = goalS * (loopsRemaining-1)
+   maxGoalSize = sum[arrS]
+   maxGoalVal = 0
+   if maxGoal > maxGoalSize
+   {
+      return [false,false,false]
+   }
+
+   for x = 0 to (arrSize-1)
+   {
+      if minSize >= goalS
+      {
+         minVal = arrSize - x
+         minSize = minSize - arrS@x
+      }
+      if maxGoalSize >= maxGoal
+      {
+         maxGoalVal = arrSize - x
+         maxGoalSize = maxGoalSize - arrS@x
+      }
+   }
+   return [minVal,arrSize-maxGoalVal,arrSize]
+}
+
+[minLength,maxLength,packagesLength] = sizeCalc[packages,equalWeight,split]
+
+// Run a loop until combinations that match equalWeight are found
+result = new array
+
+for i = minLength to maxLength // Only run necessary loops
+{
+   packagesCombos = packages.combinations[i]
+   for packagesCombo = packagesCombos
+   {
+      if sum[packagesCombo] == equalWeight
+      {
+         // If a match is found, add it to array
+         result.push[packagesCombo]
+      }
+   }
+   if length[result] > 0 // If any results are found, break the loop
+   {
+      break // End as soon as an array of valid results is populated
+   }
+}
+
+packageComboQuantumEntanglement = new array
+
+for packageCombo = result
+{
+   packageComboQuantumEntanglement.push[[product[packageCombo],packageCombo]]
+}
+// Sorting function to compare 
+cmpfunc = {|a, b, column| a@column <=> b@column}
+
+sort[packageComboQuantumEntanglement,cmpfunc,0]
+
+// Making an assumption that the smallest value will match up with the other necessary groups. It worked for me. If that doesn't work you could try packageComboQuantumEntanglement@1@0 and so on.
+println["Final result for $split divisions is " + packageComboQuantumEntanglement@0@0]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
