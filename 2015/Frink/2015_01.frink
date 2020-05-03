@@ -38,7 +38,7 @@ for direction = directions
    if floors < 0 && basementcheck == 0
    {
       println["Santa entered the basement on move $counter."]
-	  // Chante the basementcheck variable so that this code doesn't run again.
+	  // Change the basementcheck variable so that this code doesn't run again.
       basementcheck = 1
    }
    // End Part II
