@@ -3,3 +3,6 @@
 
 # VS Code Workspaces ignored
 Workspaces/
+
+# VS Code files
+.vscode/
