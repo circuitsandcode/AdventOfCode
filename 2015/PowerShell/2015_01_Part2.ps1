@@ -7,20 +7,21 @@
 # Github: https://github.com/circuitsandcode
 # MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
 
-$start = Get-Date
+[datetime]$start = Get-Date
 
 # I've used an Environment Path variable to shortcut to my AdventOfCode folder. Adjust this to the absolute or relative path with your input file.
-$directions = Get-Content -Path $env:AdventPath\2015\InputFiles\2015_01_input.txt
+[string]$directions = Get-Content -Path $env:AdventPath\2015\InputFiles\2015_01_input.txt
 
 # Set starting variables
-$floors = 0
-$counter = 0
+[int]$floors = 0
+[int]$counter = 0
 
 # Convert the Directions String to an Array
-$directions = $directions.toCharArray()
+[array]$directions = $directions.toCharArray()
 
 # Loop through the directions array
-foreach ($direction in $directions) {
+foreach ($direction in $directions)
+{
     # Adjust the counter to count moves so we can determing when Santa first entered the basement.
     $counter++
     # Adjust the floors variable depending on the current direction.
@@ -39,6 +40,6 @@ foreach ($direction in $directions) {
     }
 }
 
-$end = Get-Date
-$elapsed = $end-$start
+[datetime]$end = Get-Date
+[timespan]$elapsed = $end-$start
 write-host "Program run time: $($elapsed.TotalSeconds) seconds"
