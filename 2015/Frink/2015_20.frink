@@ -15,28 +15,46 @@ HousePresentsGoal = parseInt[HousePresentsStr]
 
 houses = new dict
 
+// Part I
 // Setting an upper threshold. Could be written as a while as well.
 maxLoop = 1000000
+// Set up minimum house number value
+minHouseNumber = 1000000
 
 OUTERLOOP:
 for elf = 1 to maxLoop step 1
 {
+   // It will be impossible for any elves higher than the minimum house number to deliver more presents to a lower numbered house.
+   if elf > minHouseNumber
+   {
+      break
+   }
    presents = elf * 10
    for house = elf to maxLoop step elf
    {
+      // If the house number is greater than the current house number, skip to the next elf. No need to keep calculating beyond what is needed.
+      if house > minHouseNumber
+      {
+         next OUTERLOOP
+      }
       // Add the total number of presents to the current house.
       houses.increment[house,presents]
+      // If the current house has the needed presents, update the minHouseNumber.
       if houses@house >= HousePresentsGoal
       {
-         println["The first house to get at least $HousePresentsGoal presents is $house"]
-         break OUTERLOOP
+         minHouseNumber = house
       }
    }
 }
 
+println["The lowest house number to get at least $HousePresentsGoal presents in Part I is $minHouseNumber"]
+
+
 // Part II
 // Start with an empty houses dictionary.
 houses.clear[]
+// Reset minimum house number value
+minHouseNumber = 1000000
 
 ELFLOOP:
 for elf = 1 to maxLoop step 1
@@ -46,20 +64,26 @@ for elf = 1 to maxLoop step 1
    HOUSELOOP:
    for house = elf to maxLoop step elf
    {
+      // If the house number is greater than the current house number, skip to the next elf. No need to keep calculating beyond what is needed.
+      if house > minHouseNumber
+      {
+         next ELFLOOP
+      }
       houses.increment[house,presents]
       if houses@house >= HousePresentsGoal
       {
-         println["The first house to get at least $HousePresentsGoal presents in Part II is $house"]
-         break ELFLOOP
+         minHouseNumber = house
       }
-      houseCounter = houseCounter + 1
       // The elf will stop delivering after 50 houses.
+      houseCounter = houseCounter + 1
       if (houseCounter == 50)
       {
          break HOUSELOOP
       }
    }
 }
+
+println["The lowest house number to get at least $HousePresentsGoal presents in Part II is $minHouseNumber"]
 
 end = now[]
 println["Program run time: " + ((end - start)*1.0 -> "seconds")]
