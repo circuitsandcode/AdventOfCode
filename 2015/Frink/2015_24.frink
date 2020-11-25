@@ -87,7 +87,7 @@ cmpfunc = {|a, b, column| a@column <=> b@column}
 sort[packageComboQuantumEntanglement,cmpfunc,0]
 
 // Making an assumption that the smallest value will match up with the other necessary groups. It worked for me. If that doesn't work you could try packageComboQuantumEntanglement@1@0 and so on.
-println["Final result for $split divisions is " + packageComboQuantumEntanglement@0@0]
+println["Final Quantum Entanglement result for $split divisions is " + packageComboQuantumEntanglement@0@0]
 
 end = now[]
 println["Program run time: " + ((end - start)*1.0 -> "seconds")]
