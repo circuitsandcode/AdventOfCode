@@ -37,7 +37,7 @@ for dimension = dimensions
    // get the smallest size area from the array
    smallestside = min[areas]
    
-   // Determin the paper needed using the formula given.
+   // Determine the paper needed using the formula given.
    paper = (2 * areas@0) + (2 * areas@1) + (2 * areas@2) + smallestside // 2*l*w + 2*w*h + 2*h*l + smallest side
 
    // Increment the totalpaper variable
