@@ -1,6 +1,7 @@
 # Solution for 2015 Day 1: Not Quite Lisp
 # https://adventofcode.com/2015/day/1
 # Written in PowerShell by Chris Hansen
+# Works in Windows PowerShell 5.1 and PowerShell 7.1
 # Website: https://circuitsandcode.wehappyfew.net/
 # Twitter: https://twitter.com/CircuitsAndCode
 # Github: https://github.com/circuitsandcode
