@@ -1,6 +1,9 @@
 # Not includeing any InputFiles directories
 **InputFiles/
 
+# Not inluding any working directories
+**Working/
+
 # VS Code Workspaces ignored
 Workspaces/
 
