@@ -8,6 +8,7 @@
 
 [datetime]$start = Get-Date
 
+# Import Input File to a string
 # I've used an Environment Path variable to shortcut to my AdventOfCode folder. Adjust this to the absolute or relative path with your input file.
 [string]$directions = Get-Content -Path $env:AdventPath\2015\InputFiles\2015_01_input.txt
 
@@ -26,11 +27,11 @@ write-host "Part I: Santa ended on floor $($floors)."
 $floors = 0
 [int]$counter = 0
 
-# Convert the Directions String to an Array
-[array]$directions = $directions.toCharArray()
+# Convert the Directions String to an Array with individual characters
+[array]$directionsArr = $directions.toCharArray()
 
-# Loop through the directions array
-foreach ($direction in $directions)
+# Loop through the directionsArr array
+foreach ($direction in $directionsArr)
 {
     # Adjust the counter to count moves so we can determing when Santa first entered the basement.
     $counter++
