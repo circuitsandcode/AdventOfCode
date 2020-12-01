@@ -1,0 +1,65 @@
+// Solution for 2020 Day 1: Report Repair
+// https://adventofcode.com/2020/day/1
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Import the input file using the lines function. This will import the file into a enumeration.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Converting the line enumeration into an array
+report = array[lines["file:../Projects/AdventOfCode/2020/InputFiles/2020_01_input.txt"]]
+
+// Sizes are brought in as strings from the lines function. The parseInt function converts the values to interger.
+counter = 0
+for reportItem = report
+{
+    report@counter = parseInt[reportItem]
+    counter = counter + 1
+}
+
+// Generate a list of all possible combinations of two numbers from the report
+reportCombos = report.combinations[2]
+
+// Loop through the list looking for two values that add up to 2020
+for reportCombo = reportCombos
+{
+    if reportCombo@0 + reportCombo@1 == 2020
+    {
+        println["Part I: The two values that equal 2020 are " + reportCombo@0 + " and " + reportCombo@1 + ". The sum of them is: " + (reportCombo@0 * reportCombo@1)]
+        break
+    }
+}
+
+// Generate a list of all possible combinations of two numbers from the report
+reportCombos = report.combinations[2]
+
+// Loop through the list looking for two values that add up to 2020
+for reportCombo = reportCombos
+{
+    if reportCombo@0 + reportCombo@1 == 2020
+    {
+        println["Part I: The two values that equal 2020 are " + reportCombo@0 + " and " + reportCombo@1 + ". The product of those numbers is: " + (reportCombo@0 * reportCombo@1)]
+        break
+    }
+}
+
+// Part II
+// Generate a list of all possible combinations of three numbers from the report
+reportCombos = report.combinations[3]
+
+// Loop through the list looking for three values that add up to 2020
+for reportCombo = reportCombos
+{
+    if sum[reportCombo] == 2020 // Using the sum function instead of hard coding each item in the array.
+    {
+        println["Part II: The three values that equal 2020 are " + reportCombo@0 + ", " + reportCombo@1 + ", and " + reportCombo@2 + ". The product of those numbers is: " + product[reportCombo]]
+        break
+    }
+}
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
