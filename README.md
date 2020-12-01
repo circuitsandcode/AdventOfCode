@@ -10,4 +10,6 @@ My goal in these solutions is education. I tried to err on the side of being exp
 ## Programming Languages Used
 Currently working in the language [Frink](https://frinklang.org/). To execute Frink programs, you will need the Frink.jar file which and Java Virtual Machine. Full instructions are available on the [Running Frink](https://frinklang.org/#RunningFrink) chapter of the documentation.
 
-I'm planning on adding other languages soon and will update as that happens.
+Also developing solutions to years 2015 and 2020 in [PowerShell](https://docs.microsoft.com/en-us/powershell/) with the goal of everything running in version 5.1 and 7.1.
+
+I'm planning on adding other languages and years over time and will update as that happens.
