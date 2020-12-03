@@ -1,0 +1,131 @@
+// Solution for 2020 Day 3: Toboggan Trajectory
+// https://adventofcode.com/2020/day/3
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = ["..##.......",
+"#...#...#..",
+".#....#..#.",
+"..#.#...#.#",
+".#...##..#.",
+"..#.##.....",
+".#.#.#....#",
+".#........#",
+"#.##...#...",
+"#...##....#",
+".#..#...#.#"]
+sampleSolution1 = 7
+sampleSolution2 = 336
+
+tobogganTrajectory[areaArr,partNum,sampleSolution = 0] :=
+{
+	// Copy the array passed into the function to avoid modifying the input array.
+	areaArrInternal = deepCopy[areaArr]
+	// Save the puzzle part for control flow
+	ProblemPart = charList[partNum]
+	currentLocation = [0,0]
+	// Get length from top to bottom (rows in the array)
+	areaLength = length[areaArrInternal]
+	// Get length from side to side (columns in the array)
+	locationLength = length[areaArrInternal@0] // Get length of one of the inputs as a reference
+	// Convert each row to array of characters
+	i = 0
+	for location = areaArrInternal
+	{
+		areaArrInternal@i = charList[location]
+		i = i+1
+	}
+
+	// Create array for final values
+	treesArr = new array
+
+	// Puzzle moves
+	// Define for Part I and II
+	if ProblemPart.contains["1"]
+	{
+		moves = [[3,1]]
+	}
+	if ProblemPart.contains["2"]
+	{
+		moves = [[1,1],
+		[3,1],
+		[5,1],
+		[7,1],
+		[1,2]]
+	}
+
+	// Loop through each move
+	for move = moves
+	{
+		// Reset starting location to top left corner
+		currentLocation@0 = 0
+		currentLocation@1 = 0
+		// Set variable to count trees hit based on moves
+		treesHit = 0
+		// Copy array values to variables for easy reference
+		rightMove = move@0
+		downMove = move@1
+
+		// Move through the area array using the current move values.
+		for i = 1 to (areaLength - downMove) step downMove
+		{
+			// Move down the current down move value
+			currentLocation@0 = (currentLocation@0) + downMove
+			// Loop to begining of side to side if gone over the edge. It just repeats itself as you go to the right.
+			if (currentLocation@1) + rightMove <= locationLength - 1
+			{
+				currentLocation@1 = (currentLocation@1) + rightMove
+			} else
+			{
+				currentLocation@1 = (currentLocation@1) + rightMove - locationLength
+			}
+			// Update treesHit when hit by tree
+			if areaArrInternal@(currentLocation@0)@(currentLocation@1) == "#"
+			{
+				treesHit = treesHit + 1
+			}
+		}
+		// Add trees hit on this run to the total.
+		treesArr.push[treesHit]
+	}
+	treesMultiplied = product[treesArr]
+	println["Part $partNum: The multiplied number of trees is: $treesMultiplied."]
+	if sampleSolution != 0
+	{
+		if sampleSolution == treesMultiplied
+		{
+			println["The Sample Solution is correct!"]
+		} else
+		{
+			println["The Sample Solution is incorrect."]
+		}
+	}
+	println[""]
+}
+
+// Test Sample Solutions
+// Use function to solve Sample I
+tobogganTrajectory[sampleInput,"S1",sampleSolution1]
+
+// Use function to solve Sample II
+tobogganTrajectory[sampleInput,"S2",sampleSolution2]
+
+// Import the input file using the lines function. This will import the file into a enumeration.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Convert the line enumeration into an array
+tobogganInput = array[lines["file:../Projects/AdventOfCode/2020/InputFiles/2020_03_input.txt"]]
+
+// Use function to solve Part I
+tobogganTrajectory[tobogganInput,"1"]
+
+// Use function to solve Part II
+tobogganTrajectory[tobogganInput,"2"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
