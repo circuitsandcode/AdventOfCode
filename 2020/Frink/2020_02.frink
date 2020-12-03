@@ -1,0 +1,95 @@
+// Solution for 2020 Day 2: Password Philosophy
+// https://adventofcode.com/2020/day/2
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Create function for solving the puzzle.
+// Split the dimensions the password character range, character, and password values
+passwordValidator[passwordPolicies,partNum,sampleSolution = 0] :=
+{
+	// Save the puzzle part for control flow
+	ProblemPart = charList[partNum]
+	// Set the counter used for the final output
+	passwordValidCount = 0
+	for passwordPolicy = passwordPolicies
+	{
+		passwordPolicyArr = split[" ",passwordPolicy]
+		passwordRangeStr = split["-",passwordPolicyArr@0]
+		// Convert the passwordRange from String to Int
+		passwordRange = new array
+		passwordRange@0 = parseInt[passwordRangeStr@0]
+		passwordRange@1 = parseInt[passwordRangeStr@1]
+		// Save the needed character (remove the colon)
+		passwordCharacter = substr[passwordPolicyArr@1,0,1]
+		// Break the characters in the password into an array. This is used in different ways in Parts 1 and 2
+		passwordCharacters = charList[passwordPolicyArr@2]
+		// Part I logic - determine if the character exists between the min and max of the range
+		if ProblemPart.contains["1"]
+		{
+			// Create a dictionary counting the characters in the password string
+			passwordCharactersDict = countToDict[passwordCharacters]
+			// Increment the needed character by 0 to add it to the dictionary if it isn't already in there.
+			passwordCharactersDict.increment[passwordCharacter, 0]
+			// Detemine if the character appears in the password the required number of times.
+			// passwordRange is an array with the first character the min and the second the max
+			if passwordCharactersDict@passwordCharacter >= passwordRange@0 && passwordCharactersDict@passwordCharacter <= passwordRange@1
+			{
+				passwordValidCount = passwordValidCount + 1
+			}
+		// Part II logic - determine if the character exists at only one of the min or max positions of the range
+		}
+		if ProblemPart.contains["2"]
+		{
+			// Check if the required character exists at at least one of the specified locations.
+			// Subtract one from the two range values since Frink is 0 indexed and the password system is not.
+			if passwordCharacters@((passwordRange@0)-1) == passwordCharacter xor passwordCharacters@((passwordRange@1)-1) == passwordCharacter
+			{
+				passwordValidCount = passwordValidCount + 1
+			}
+		}
+	}
+	// Display the solution to the problem
+	println["Part $partNum: The total number of valid passwords is: $passwordValidCount."]
+	// Testing sample solution
+	if sampleSolution != 0
+	{
+		if sampleSolution == passwordValidCount
+		{
+			println["The Sample Solution is correct!"]
+		} else
+		{
+			println["The Sample Solution is incorrect."]
+		}
+	}
+	println[""]
+}
+
+// Prepare Sample Input
+sampleInput = ["1-3 a: abcde","1-3 b: cdefg","2-9 c: ccccccccc"]
+sampleSolution1 = 2
+sampleSolution2 = 1
+
+// Test Sample Solutions
+// Sample I
+passwordValidator[sampleInput,"S1",sampleSolution1]
+// Sample II
+passwordValidator[sampleInput,"S2",sampleSolution2]
+
+// Import the input file using the lines function. This will import the file into a enumeration.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Convert the line enumeration into an array
+passwordInput = array[lines["file:../Projects/AdventOfCode/2020/InputFiles/2020_02_input.txt"]]
+
+// Use function to solve Part I
+passwordValidator[passwordInput,"1"]
+
+// Use function to solve Part I
+passwordValidator[passwordInput,"2"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
