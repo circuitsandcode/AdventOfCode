@@ -1,0 +1,213 @@
+// Solution for 2020 Day 4: Passport Processing
+// https://adventofcode.com/2020/day/4
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Load sample password inputs
+sampleInput = ["ecl:gry pid:860033327 eyr:2020 hcl:#fffffd",
+"byr:1937 iyr:2017 cid:147 hgt:183cm",
+"",
+"iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884",
+"hcl:#cfa07d byr:1929",
+"",
+"hcl:#ae17e1 iyr:2013",
+"eyr:2024",
+"ecl:brn pid:760753108 byr:1931",
+"hgt:179cm",
+"",
+"hcl:#cfa07d eyr:2025 pid:166559648",
+"iyr:2011 ecl:brn hgt:59in"]
+
+sampleSolution1 = 2
+// Note that there is not a sample solution to part II. Just examples of what the code should be looking for.
+
+// Create function for solving the puzzle.
+validPassportChecker[passportArray,sampleSolution = 0] :=
+{
+	// Make an array of passport fields. This information comes from the problem description.
+	// passportFields = ["byr","iyr","eyr","hgt","hcl","ecl","pid","cid"]
+	passportFields = ["byr","iyr","eyr","hgt","hcl","ecl","pid"] // cid is optional in both Parts I and II so I removed it since it is irrelevant to the solution
+
+	// Set variables used to count valid passports
+	validCounter1 = 0 // Used to count part 1
+	validCounter2 = 0 // Used to count part 2
+
+	// Combine the passport elements into a single array. Essentially I am just removing the line breaks to make it easier to work with.
+	// Create new array and variable to capture the concatenated values
+	passportArrayConcat = new array
+	fullPassport = ""
+	// Loop through to combine passport array into one array item per passport
+	for i = 0 to (length[passportArray]) - 1
+	{
+		if passportArray@i != ""
+		{
+			// Load the fullPassport with the current line or a concatenated combination of all lines.
+			if fullPassport == ""
+			{
+				fullPassport = passportArray@i
+			} else
+			{
+				fullPassport = fullPassport + " " + passportArray@i
+			}
+		}
+		// If the loop hits a blank line or the end of the array, push the concatenated fullPassport value into the Conat array
+		if passportArray@i == "" || i == length[passportArray] - 1
+		{
+			passportArrayConcat.push[fullPassport]
+			fullPassport = ""
+		}
+	}
+
+	// Loop through the concatenated passports to check for valid passports
+	for passport = passportArrayConcat
+	{
+		// Set variables used to count individual fields
+		counter = 0 // Used to count part 1
+		counter2 = 0 //Used to count part 2
+
+		// Loop through each of the required 7 passport fields to see if it is present
+		for passportField = passportFields
+		{
+			// Check to see if the passportField exists in the current passport
+			x = indexOf[passport, passportField]
+			// indexOf returns a -1 if the field is not found. Since we only care that it exists (not where in the array it exists) an value other than -1 is fine.
+			if x > -1
+				counter = counter+1
+		}
+		// Check if all 7 required fields are found
+		if counter == 7
+		{
+			// If so, increment the validCounter1 variable
+			validCounter1 = validCounter1 + 1
+
+			// Below is the solution for Part II
+			// Divide the passport into the indivudal items by splitting on the space between them.
+			passportItems = split[" ",passport]
+			// Loop through passport items to check on the unique validation rules for each item
+			// Split the passport items into key value pair strings (kv)
+			for kv = passportItems
+			{
+				// Rules to check for are from the problem description
+				/*
+				byr (Birth Year) - four digits; at least 1920 and at most 2002.
+				iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+				eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+				hgt (Height) - a number followed by either cm or in:
+					If cm, the number must be at least 150 and at most 193.
+					If in, the number must be at least 59 and at most 76.
+				hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+				ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+				pid (Passport ID) - a nine-digit number, including leading zeroes.
+				cid (Country ID) - ignored, missing or not.
+				*/
+
+				// Split the key value pair into an array with the key on one side and the value on the other
+				kvp = split[":",kv]
+
+				// Check each rule in the loop.
+				// Year rules. Use parseInt to return a number. Make sure that it is a number (not returning an undef result) and that it is in the correct range.
+				// Birth Year
+				if kvp@0 == "byr" && parseInt[kvp@1] != undef and parseInt[kvp@1] >= 1920 and parseInt[kvp@1] <= 2002
+				{
+					counter2 = counter2 + 1
+				}
+				// Issue Year
+				if kvp@0 == "iyr" && parseInt[kvp@1] != undef and parseInt[kvp@1] >= 2010 and parseInt[kvp@1] <= 2020
+				{
+					counter2 = counter2 + 1
+				}
+				// Experation Year
+				if kvp@0 == "eyr" && parseInt[kvp@1] != undef and parseInt[kvp@1] >= 2020 and parseInt[kvp@1] <= 2030
+				{
+					counter2 = counter2 + 1
+				}
+
+				// Attribute rules. Use regex to check the specific values.
+				// Height
+				if kvp@0 == "hgt"
+				{
+					// Divide the value into the number and the inch/centimeter indicator.
+					hgtvalues = kvp@1 =~ %r/^(\d+)(cm|in)$/
+					// Check the regex result to make sure it is in the correct range for the specific measurement.
+					if hgtvalues != undef && ((hgtvalues@1 == "in" && parseInt[hgtvalues@0] >= 59 and parseInt[hgtvalues@0] <= 76) || (hgtvalues@1 == "cm" && parseInt[hgtvalues@0] >= 150 and parseInt[hgtvalues@0] <= 193))
+					{
+						counter2 =counter2 + 1
+					}
+				}
+				// Hair Color
+				if kvp@0 == "hcl"
+				{
+					// Use regex to ensure there is a # and then exactly 6 characters in the approved range.
+					hclvalues = kvp@1 =~ %r/^#([0-9a-f]{6})$/
+					if hclvalues != undef
+					{
+						counter2 = counter2 + 1
+					}
+				}
+				// Eye Color
+				if kvp@0 == "ecl"
+				{
+					// Use regex to ensure the value is in the approved list of values.
+					eclvalues = kvp@1 =~ %r/^(amb|blu|brn|gry|grn|hzl|oth)$/
+					if eclvalues != undef
+					{
+						counter2 = counter2 + 1
+					}
+				}
+
+				// Passport ID
+				// Use regex to ensure there are exactly 9 digits and nothing else in the string
+				if kvp@0 == "pid"
+				{
+					pidvalues = kvp@1 =~ %r/^([0-9]{9})$/
+					if pidvalues != undef
+					{
+						counter2 = counter2 + 1
+					}
+				}
+			}
+
+			// Check if all 7 required fields are valid
+			if counter2 == 7
+			{
+				// If so, increment the validCounter1 variable
+				validCounter2 = validCounter2 + 1
+			}
+		}
+	}
+	// Print the results
+	println["Part I: The number of passports with all required fields is $validCounter1"]
+	if sampleSolution != 0
+	{
+		if sampleSolution == validCounter1
+		{
+			println["The Sample Solution is correct!"]
+		} else
+		{
+			println["The Sample Solution is incorrect."]
+		}
+	}
+	println["Part II: The number of valid passports is $validCounter2"]
+
+	// Print a blank line just for formatting purposes.
+	println[""]
+}
+
+// Test Sample Solutions
+// Use function to solve the two Sample parts
+validPassportChecker[sampleInput,sampleSolution1]
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+passportInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_04_input.txt"]
+
+// Use function to solve for the input file
+validPassportChecker[passportInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
