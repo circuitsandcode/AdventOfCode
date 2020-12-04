@@ -23,6 +23,7 @@ sampleInput = ["..##.......",
 sampleSolution1 = 7
 sampleSolution2 = 336
 
+// Create function for solving the puzzle.
 tobogganTrajectory[areaArr,partNum,sampleSolution = 0] :=
 {
 	// Copy the array passed into the function to avoid modifying the input array.
