@@ -1,0 +1,48 @@
+// Solution for 2020 Day 5: Binary Boarding
+// https://adventofcode.com/2020/day/5
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+seatCodes = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_05_input.txt"]
+
+// Create a dictionary of seat codes to convert to their binary value
+binaryConvert = new dict
+binaryConvert@"F" = "0"
+binaryConvert@"L" = "0"
+binaryConvert@"B" = "1"
+binaryConvert@"R" = "1"
+
+// Use a regex search and replace evaluated function to convert the FLBR code into a binary value
+for i = 0 to length[seatCodes] - 1
+{
+	// The seat code is converted to a binary string and then parsed to int in binary base
+	seatCodes@i = parseInt[(seatCodes@i =~ %s/(F|L|B|R)/binaryConvert@($1)/ge),2]
+}
+
+// Print the Part I result, which is just the max value in the array
+println["Part I: The highest seat ID on a boarding pass is " + max[seatCodes]]
+
+// Part II Variables
+minSeat = min[seatCodes]
+xorCompare = 0
+// Determine which seat is missing from the array using bitwise xor operator algorithm
+// This is the fastest way to find the missing value from an array that does not begin with one
+// This way we can solve both parts in one pass of the array
+for i = 0 to length[seatCodes] - 1
+{
+	xorCompare = bitXor[xorCompare,(bitXor[minSeat,seatCodes@i])]
+	minSeat = minSeat + 1
+}
+
+// Print the Part II result, which is the bitwise xor of the current minSeat and the xorCompare value
+println["Part II: Your seat is " + bitXor[minSeat,xorCompare]]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
