@@ -64,7 +64,7 @@ seatFinder[seatCodes,sampleSolution = 0] :=
 	// Determine the max calculated seat number.
 	maxSeatCodePositions = max[seatCodePositions]
 	// Print the results
-	println["Part I: The number of passports with all required fields is $maxSeatCodePositions"]
+	println["Part I: The highest seat ID on a boarding pass is $maxSeatCodePositions"]
 	// Check the sample solution if entered.
 	if sampleSolution != 0
 	{
