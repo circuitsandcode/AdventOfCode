@@ -1,0 +1,109 @@
+// Solution for 2020 Day 5: Binary Boarding
+// https://adventofcode.com/2020/day/5
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Load sample password inputs.
+sampleInput = ["FBFBBFFRLR",
+	"BFFFBBFRRR",
+	"FFFBBBFRRR",
+	"BBFFBBFRLL"]
+	
+sampleSolution1 = 820
+// Note that there is not a sample solution to part II. Just examples of what the code should be looking for.
+
+// Create function for solving the puzzle.
+seatFinder[seatCodes,sampleSolution = 0] :=
+{
+	// Create an array to store the calculated seat numbers.
+	seatCodePositions = new array
+	// Loop through the seatCode array
+	for seatCode = seatCodes
+	{
+		// Create arrays to hold the current range of potential seats.
+		rowNumRange = new array
+		aisleNumRange = new array
+		rowNumRange@0 = 0
+		rowNumRange@1 = 127
+		aisleNumRange@0 = 0
+		aisleNumRange@1 = 7
+		// Loop through the individual characters in the seatCode.
+		seatCodeArray = charList[seatCode]
+		for seatCodeArrayItem = seatCodeArray
+		{
+			// Each iteration will either divide the row number range or aisler number range in half
+			rowNumDivision = (rowNumRange@1 - rowNumRange@0)/2
+			aisleNumDivision = (aisleNumRange@1 - aisleNumRange@0)/2
+			// Set the upper or lower range based on the rules for each value
+			// i.e. If the value if F, the seat is in the upper half of the range so the lower part of the range is raised by half.
+			if seatCodeArrayItem == "F"
+				rowNumRange@1 = floor[(rowNumRange@1) - rowNumDivision]
+			if seatCodeArrayItem == "B"
+				rowNumRange@0 = ceil[(rowNumRange@0) + rowNumDivision]
+			if seatCodeArrayItem == "L"
+				aisleNumRange@1 = floor[(aisleNumRange@1) - aisleNumDivision]
+			if seatCodeArrayItem == "R"
+				aisleNumRange@0 = ceil[(aisleNumRange@0) + aisleNumDivision]
+		}
+		// Check to make sure the rowNumRange and aisleNumRange upper and lower values are equal (this will be the row and aisle number).
+		if rowNumRange@0 == rowNumRange@1 && aisleNumRange@0 == aisleNumRange@1
+		{
+			seatCodePositions.push[((rowNumRange@0) * 8) + aisleNumRange@0]
+		}
+		// Check for any cases where the row and aisle were not calculated correctly.
+		if rowNumRange@0 != rowNumRange@1 || aisleNumRange@0 != aisleNumRange@1
+		{
+			println["ERROR"]
+		}
+	}
+	// Determine the max calculated seat number.
+	maxSeatCodePositions = max[seatCodePositions]
+	// Print the results
+	println["Part I: The number of passports with all required fields is $maxSeatCodePositions"]
+	// Check the sample solution if entered.
+	if sampleSolution != 0
+	{
+		if sampleSolution == maxSeatCodePositions
+		{
+			println["The Sample Solution is correct!"]
+		} else
+		{
+			println["The Sample Solution is incorrect."]
+		}
+	}
+
+	// Sort the array so we can determine which seat is unoccupied.
+	sort[seatCodePositions]
+	// Loop through the sorted array looking for a missing value.
+	for i = 0 to length[seatCodePositions] - 2
+	{
+		// Check if the current value is 2 less than the next value (meaning it is your seat). Other values should only be 1 apart.
+		if (seatCodePositions@i) + 2 == seatCodePositions@(i+1)
+		{
+			emptySeat = (seatCodePositions@i) + 1
+			println["Part II: Your seat is $emptySeat"]
+			break // No need to evaulate further.
+		}
+	}
+	// Print a blank line just for formatting purposes.
+	println[""]
+}
+
+// Test Sample Solutions
+// Use function to solve the two Sample parts
+seatFinder[sampleInput,sampleSolution1]
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+seatCodeInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_05_input.txt"]
+
+// Use function to solve for the input file
+seatFinder[seatCodeInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
