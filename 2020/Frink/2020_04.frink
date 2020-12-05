@@ -182,6 +182,7 @@ validPassportChecker[passportArray,sampleSolution = 0] :=
 	}
 	// Print the results
 	println["Part I: The number of passports with all required fields is $validCounter1"]
+	// Check the sample solution if entered
 	if sampleSolution != 0
 	{
 		if sampleSolution == validCounter1
