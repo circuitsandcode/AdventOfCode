@@ -1,0 +1,120 @@
+// Solution for 2020 Day 6: Custom Customs
+// https://adventofcode.com/2020/day/6
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Load sample form responses and solutions.
+sampleInput = ["abc",
+"",
+"a",
+"b",
+"c",
+"",
+"ab",
+"ac",
+"",
+"a",
+"a",
+"a",
+"a",
+"",
+"b"]
+
+sampleSolution1 = 11 // Solution to Part I for the sample input.
+sampleSolution2 = 61 // Solution to Part II for the sample input.
+
+// Create function for solving the puzzle.
+formResponseCounter[formResponses,sampleSolutionOne = 0,sampleSolutionTwo = 0,sample=false] :=
+{
+	// Create a dictionary for storing each group's responses.
+	responses = new dict
+	// Create arrays for the storing the length of the responses.
+	// Collect the total questions for which anyone in a group answered yes.
+	responsesCollection = new array
+	// Collect the total questions for which everyone in a group answered yes.
+	responsesEveryoneCollection = new array
+	// Variable to keep track of the group size.
+	groupSize = 0
+
+	// Loop through the form responses.
+	for i = 0 to length[formResponses] - 1
+	{
+		// Groups are divided by blank lines. As long as the next line isn't blank, it is in the same group.
+		if formResponses@i != ""
+		{
+			// Each line represents all the questions for which an individual person in the group answered yes.
+			// Break each character apart into an array so we can easily parse it.
+			responseChar = charList[formResponses@i]
+			for responseCharVal = responseChar
+			{
+				// Create or increment the dictionary key for each character by 1. This will keep one entry per answer with the total people in the group who answered it yes.
+				// We want the total count of distinct questions for Part I and the counts of people who answered it in Part II.
+				responses.increment[responseCharVal,1]
+			}
+			// Increment the group size so we know how many people are in each group.
+			// This will be compared with the people who answered the question yes in Part II.
+			groupSize = groupSize + 1
+		}
+		// Tasks for the reaching the end of a group. (Reach the end of the array or a blank line in the array indicates the end of a group.)
+		if formResponses@i == "" || i == length[formResponses] - 1
+		{
+			// Part I
+			// Push the total number of answers that anyone in a group answered yes to into the responsesCollection array.
+			responsesCollection.push[length[responses]]
+			
+			// Part II
+			// Create an array for storing counts used in Part II
+			responseEveryoneChar = new array
+			// Loop through the responses dictionary.
+			for key = responses.keys[]
+			{
+				// Only the answers that everyone in the group answered yes to should be included for Part II.
+				// Check to see if the incremented value is equal to the group size.
+				if responses@key == groupSize
+				{
+					responseEveryoneChar.push[key]
+				}
+			}
+			// Push the total number of questions for which everyone in a group answered yes to the responseEveryoneChar array.
+			responsesEveryoneCollection.push[length[responseEveryoneChar]]
+
+			// Since this is the end of the group, clear the responses dictionary and reset groupSize for the next one.
+			responses.clear[]
+			groupSize = 0
+		}
+	}
+
+	// Print the sum of both arrays.
+	totalYes = sum[responsesCollection] // Part I
+	println["Part I: The number of questions for which someone in the group answered yes is $totalYes"]
+	totalEveryoneYes = sum[responsesEveryoneCollection] // Part II
+	println["Part II: The number of questions for which everyone in the group answered yes is $totalEveryoneYes"]
+	// Print the results of the sample solution if applicable. Using the ternary operator to print of the solution is correct or not. 
+	if sample
+	{
+		println["The Sample Solution for Part I is " + ( sampleSolutionOne == totalYes ? "" : "in" ) + "correct."]
+		println["The Sample Solution for Part II is " + ( sampleSolutionTwo == totalEveryoneYes ? "" : "in" ) + "correct."]
+	}
+
+	// Print a blank line just for formatting purposes.
+	println[""]
+}
+
+// Test Sample Solutions
+// Use function to solve the two Sample parts
+formResponseCounter[sampleInput,sampleSolution1,sampleSolution2,true]
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+formResponsesInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_06_input.txt"]
+
+// Use function to solve for the input file
+formResponseCounter[formResponsesInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
