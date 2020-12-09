@@ -1,0 +1,183 @@
+// Solution for 2020 Day 8: Handheld Halting
+// https://adventofcode.com/2020/day/8
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Load sample form responses and solutions.
+InstructionsStrArr = ["nop +0",
+"acc +1",
+"jmp +4",
+"acc +3",
+"jmp -3",
+"acc -99",
+"acc +1",
+"jmp -4",
+"acc +6"]
+
+/*
+// Sample solutions for reference. Nothing is done with these variables in the code.
+sampleSolution1 = 5 // Solution to Part I for the sample input.
+sampleSolution2 = 8 // Solution to Part II for the sample input.
+*/
+
+// Instructions for reference. From the puzzle description.
+/*
+acc increases or decreases a single global value called the accumulator by the value given in the argument. For example, acc +7 would increase the accumulator by 7. The accumulator starts at 0. After an acc instruction, the instruction immediately below it is executed next.
+
+jmp jumps to a new instruction relative to itself. The next instruction to execute is found using the argument as an offset from the jmp instruction; for example, jmp +2 would skip the next instruction, jmp +1 would continue to the instruction immediately below it, and jmp -20 would cause the instruction 20 lines above to be executed next.
+
+nop stands for No OPeration - it does nothing. The instruction immediately below it is executed next.
+*/
+
+// Create functions for handheld boot instructions based on the rules above.
+// Each takes identical parameter  and returns an identical array so that each can be called by the same eval[] function.
+acc[currentLoc,accumulator,op,value] := [currentLoc + 1,op == "+" ? accumulator + value : accumulator - value]
+jmp[currentLoc,accumulator,op,value] := [op == "+" ? currentLoc + value : currentLoc - value,accumulator]
+nop[currentLoc,accumulator,op,value] := [currentLoc + 1,accumulator]
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Note that the variable name is the same as the sample input again. Comment out this line to run the sample input.
+InstructionsStrArr = lines["file:../Projects/AdventOfCode/2020/InputFiles/2020_08_input.txt"]
+
+// Create an array to store the instructions, operand (+ or -), and digits.
+counter = 0
+Instructions = new array
+for InstructionsStr = InstructionsStrArr
+{
+	InstructionsReg = InstructionsStr =~ %r/^(acc|jmp|nop)\s(\+|-)(\d*)$/
+	InstructionsArr = flatten[toArray[InstructionsReg]] // Flatten the output of the regex from a nested array to a single array
+	InstructionsArr@2 = parseInt[InstructionsArr@2] // Convert the number in string format to and int.
+	Instructions@counter = InstructionsArr.shallowCopy[] // Copy each instruction into the array.
+	counter = counter +1
+}
+
+// Set variables for the Handheld Boot evaluator with a While Loop
+instructionLocation = new set
+instructionTracker = new dict
+handheldLoop = true
+instructionPointer = 0
+accumulatorVal = 0 // Used to store the current Accumulator Value
+// Variables for Part II
+stepCounter = 0
+jmp_nopArr = [0,0,0] //This array stores the [jmp_nopCounter,instructionPointer,accumulatorVal] for jmp and nop instructions
+jmp_nopLogArr = new array // This array stores the log of jmp_nopArr
+// Loop through until the handheldLoop is set to false (by hitting an infitine loop)
+while handheldLoop
+{
+	// Grab the current function, operand, and value from the instruction list. The instructionPointer is used to select the nested array.
+	// The actual needed elements are rspectively in position 0,1,2 of that array.
+	evalFunction = Instructions@instructionPointer@0
+	evalOp = Instructions@instructionPointer@1
+	evalValue = Instructions@instructionPointer@2
+
+	// Create a log of jmp and nop instructions for Part II
+	if evalFunction == "jmp" || evalFunction == "nop"
+	{
+		jmp_nopArr@0 = jmp_nopArr@0 + 1
+		jmp_nopArr@1 = instructionPointer
+		jmp_nopArr@2 = accumulatorVal
+		jmp_nopLogArr.push[jmp_nopArr.shallowCopy[]]
+	}
+
+	// Create a text string of the function elements that will be executed with the eval function.
+	// This will execute one of the three functions (acc, jmp, and nop) created above.
+	// Each function outputs an array of two values which are stored in the instructionPointer and accumulatorVal variables.
+	[instructionPointer,accumulatorVal] = eval["$evalFunction[instructionPointer,accumulatorVal,evalOp,evalValue]"]
+	
+	// Checks against the values in the set to see if the position pointer has ever been used before.
+	// If so, set the handheld loop to false to break the while loop.
+	// Otherwise, add it to the set.
+	if instructionLocation.contains[instructionPointer]
+	{
+		handheldLoop = false
+	} else
+	{
+		instructionLocation.put[instructionPointer]
+		// Create a dictionary for Part II
+		// This stores all insturction pointers in the order they were received so I can remove them from the set of unique values in Part II.
+		stepCounter = stepCounter + 1
+		instructionTracker@stepCounter = instructionPointer
+	}
+}
+
+// Print the result of Part I
+println["Part I: Current accumulatorVal is $accumulatorVal"]
+
+// Part II
+// Loop through the instructions to see where we get to the last instruction on the list.
+// I'm going backwards through the list to start at the jmp that created the endless loop and working back from there.
+endLoop = length[Instructions] // Create variable to let us know when we've hit the last character in the instructions.
+jmp_nopLOOP:
+for jmp_nopIndex = length[jmp_nopLogArr]-1 to 0 step -1
+{
+	// The current jmp or nop instruction that will be changed.
+	jmp_nopCurrent = jmp_nopLogArr@jmp_nopIndex
+
+	// Make an alternative set of instructions with the modified jmp or nop instruction.
+	Instructions2 = Instructions.shallowCopy[] // Make a copy of the original instruction set for modification.
+	evalOpChange = Instructions2@(jmp_nopCurrent@1)@0
+	if evalOpChange == "jmp"
+	{
+		Instructions2@(jmp_nopCurrent@1)@0 = "nop"
+	}
+	if evalOpChange == "nop"
+	{
+		Instructions2@(jmp_nopCurrent@1)@0 = "jmp"
+	}
+
+	// Prep for the new run
+	instructionPointer = jmp_nopCurrent@1 // Starting instructionPointer is the pointer of the modified jmp/nop instruction.
+	accumulatorVal = jmp_nopCurrent@2 // Starting accumulatorVal is the accumulatorVal at the time of the modified jmp/nop instruction.
+	handheldLoop = true
+	instructionLocation2 = instructionLocation.shallowCopy[] // Copy the original set of unique instructionPointer values.
+
+	// Clear out set of values after the current jmp_nop location.
+	// The instructions will go in a different order after the jmp/nop instruction is changed. so everything that came after the current location will be different
+	KEYOUTERLOOP:
+	for instructionTrackerkey = instructionTracker.keys[]
+	{
+		if instructionTracker@instructionTrackerkey == instructionPointer
+		{
+			//minKey = instructionTrackerkey
+			for instructionTrackerInsidekey = instructionTrackerkey to stepCounter // Move from the current current step to the last value of stepCounter from the above loop
+			{
+				instructionLocation2.remove[instructionTracker@instructionTrackerInsidekey] // Remove the values from the set after the current jmp nop from the set
+			}
+			// No need to evaulate further
+			break KEYOUTERLOOP
+		}
+	}
+
+	// Run the same loop as in Part I, but starting from the changed instruction, once again looking for endless loops.
+	while handheldLoop
+	{
+		evalFunction = Instructions@instructionPointer@0
+		evalOp = Instructions@instructionPointer@1
+		evalValue = Instructions@instructionPointer@2
+		[instructionPointer,accumulatorVal] = eval["$evalFunction[instructionPointer,accumulatorVal,evalOp,evalValue]"]
+		if instructionLocation.contains[instructionPointer]
+		{
+			handheldLoop = false
+		} else
+		{
+			instructionLocation2.put[instructionPointer]
+		}
+		// Check to see if we have reached the last instruction. (This should be a command to increment the instructionPointer by 1.)
+		if instructionPointer == endLoop
+		{
+			break jmp_nopLOOP
+		}
+	}
+}
+
+// Print the result of Part II
+println["Part II: Current accumulatorVal is $accumulatorVal"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
