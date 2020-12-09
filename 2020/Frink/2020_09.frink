@@ -1,0 +1,143 @@
+// Solution for 2020 Day 9: Encoding Error
+// https://adventofcode.com/2020/day/9
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+cypherArrInput = ["35",
+	"20",
+	"15",
+	"25",
+	"47",
+	"40",
+	"62",
+	"55",
+	"65",
+	"95",
+	"102",
+	"117",
+	"150",
+	"182",
+	"127",
+	"219",
+	"299",
+	"277",
+	"309",
+	"576"]
+
+// Sample Range
+precedingRange = 5
+
+/*
+// Sample solutions for reference. Nothing is done with these variables in the code.
+sampleSolution1 = 127
+sampleSolution1 = 62
+*/
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Note that the variable name is the same as the sample input again. Comment out this line to run the sample input.
+cypherArrInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_09_input.txt"]
+precedingRange = 25
+
+// Convert all values in the array to int since they are imported as strings.
+for i = 0 to length[cypherArrInput] - 1
+{
+	cypherArrInput@i = parseInt[cypherArrInput@i]
+}
+
+// Define function for finding the number with no two numbers in the preceding range that add up to it.
+cypherWeaknessHacker[cypherArr,startPos,precedingNum,splitVal] :=
+{
+	targetValue = cypherArr@startPos
+	rangeStartPos = startPos - precedingNum
+	rangeEndPos = startPos
+	// Slice the array into the preceding range.
+	cypherSplit = slice[cypherArr,rangeStartPos,rangeEndPos]
+	// Divide the array up into all combinations of 2.
+	cypherSplitCombos = cypherSplit.combinations[splitVal]
+	// Set a variable to capture the result of the search.
+	sumFound = false
+	// Loop through the combinations.
+	for cypherSplitCombo = cypherSplitCombos
+	{
+		// If the sum of the elements in the array equal the target value, then it is not the number we are looking for.
+		if sum[cypherSplitCombo] == targetValue
+		{
+			sumFound = true
+			break // No need to evaluate further if one found.
+		}
+	}
+	// Return the results of the search.
+	return [sumFound,targetValue]
+}
+
+// Define variable for capturing the weakness target number.
+weaknessValue = 0
+// Loop through the array starting after the preamble numbers.
+for i = precedingRange to length[cypherArrInput]-1
+{
+	// Run the function and test to see if a weakness was found.
+	[testResult,weaknessValue] = cypherWeaknessHacker[cypherArrInput,i,precedingRange,2]
+	if testResult == false
+	{
+		println["Part I: The cyper weakness is $weaknessValue"]
+		break // No need evaluate further if one found
+	}
+}
+
+// Part II"
+// Get a list of indexes of values that are greater than our target value so we can focus the search only on the ranges that could potentially sum up to the target value.
+// My first pass of this problem just cycled through every possible range in the array, which worked but was, as you might expect with so many possibilities, very slow.
+// By filtering down to only relevant ranges, I was able to reduce the run time down to 1 to 3 seconds.
+greaterValues = select[ cypherArrInput, { |y,compareVal| y >= compareVal },weaknessValue ]
+greaterValuesIndexes = new array
+for gv = greaterValues
+{
+	greaterValuesIndexes.push[cypherArrInput.indexOf[gv]]
+}
+
+// Declare variable to capture result and another to determine the beginning of our range.
+minMaxSum = 0
+i = 0
+greaterValuesIndex = greaterValuesIndexes.popFirst[]
+// Loop through the array looking for a range of concurrent numbers that equals the weaknessValue.
+OUTERLOOP:
+do
+{
+	// The range cannot contain the weaknessValue value or anything above it so if any values like that are found, proceed to the next iteration.
+	if i == greaterValuesIndex
+	{
+		i = greaterValuesIndex+1 // Update to the next value for the beginning of the range
+		greaterValuesIndex = greaterValuesIndexes.popFirst[] // Update to the next value for the end of the range
+	}
+	INNERLOOP:
+	for x = (i+2) to greaterValuesIndex
+	{
+		cypherSubset = slice[cypherArrInput,i,x]
+		// Add up all values in sliced array. If their sum equals the weaknessValue, calculate the total of the min and max value.
+		cypherSubsetSum = sum[cypherSubset]
+		// If the sum is greater than the target value, there is no reason to evaulate from further from this starting point
+		if cypherSubsetSum > weaknessValue
+		{
+			break INNERLOOP
+		}
+		if cypherSubsetSum == weaknessValue
+		{
+			minValue = min[cypherSubset]
+			maxValue = max[cypherSubset]
+			minMaxSum = sum[[minValue,maxValue]]
+			break OUTERLOOP // No need to evaulate further
+		}
+	}
+	i = i+1 // increment to the next postition to start on
+} while i <= length[cypherArrInput]-1 // Break if the array ever advances to the end, which it shouldn't anyway.
+
+println["Part II: The cyper min max sum is $minMaxSum"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
