@@ -6,6 +6,8 @@
 // Github: https://github.com/circuitsandcode
 // MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
 
+start = now[]
+
 // Load sample form responses and solutions.
 bagsInput = ["light red bags contain 1 bright white bag, 2 muted yellow bags.",
 	"dark orange bags contain 3 bright white bags, 4 muted yellow bags.",
@@ -115,3 +117,6 @@ bagSearchDown[bagDictSearch,bagSearch] :=
 // Create a variable and run the recursive function to search for your bag. The result will be the set of all distinct bags the answer is the length of that set.
 bagsContainedResult = bagSearchDown[bagsDict,"shiny gold"]
 println["Part II: The total number of bags that your bag can contain are: " + bagsContainedResult]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
