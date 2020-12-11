@@ -1,0 +1,137 @@
+// Solution for 2020 Day 10: Adapter Arra
+// https://adventofcode.com/2020/day/10
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Load sample input and solutions.
+
+/*
+joltageInputStr = ["16",
+	"10",
+	"15",
+	"5",
+	"1",
+	"11",
+	"7",
+	"19",
+	"6",
+	"12",
+	"4"]
+*/
+
+/*
+// Sample solutions for reference. Nothing is done with these variables in the code.
+Solution1 = 35
+Solution2 = 8
+*/
+
+// There are two sample inputs and solutions on this problem.
+// You can uncomment either block to test it out.
+
+/*
+joltageInputStr = ["28",
+	"33",
+	"18",
+	"42",
+	"31",
+	"14",
+	"46",
+	"20",
+	"48",
+	"47",
+	"24",
+	"23",
+	"49",
+	"45",
+	"19",
+	"38",
+	"39",
+	"11",
+	"1",
+	"32",
+	"25",
+	"35",
+	"8",
+	"17",
+	"7",
+	"9",
+	"4",
+	"2",
+	"34",
+	"10",
+	"3"]
+*/
+
+/*
+// Sample #2 solutions for reference. As with before, nothing is done with these variables in the code.
+Solution1 = 220
+Solution2 = 19208
+*/
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Note that the variable name is the same as the sample input again. Comment out this line to run the sample input.
+joltageInputStr = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_10_input.txt"]
+
+// Convert all values in the array to int since they are imported as strings. Mapping the parseInt function to all values in the string
+joltageInput = map["parseInt",joltageInputStr]
+
+// The Input file needs to be sorted and then a starting value of 0 and an ending value of the greatest number +3 added.
+sort[joltageInput]
+joltageInput.pushFirst[0]
+joltageInput.push[max[joltageInput]+3]
+
+// Part I
+// Create a dictionary to count the differences from joltageInput@i to joltageInput@(i+1)
+// The dictionary will have entries for 1, 2, and 3 and the total number of array item values with a difference from the preceding item value of 1, 2, or 3.
+// i.e. If the value at i is 5 and the value at i+1 is 8 then the dictionary entry for 3 will be incremented by 1.
+joltageDiffDict = new dict
+for i = 0 to length[joltageInput]-2
+{
+	joltageDiffDict.increment[joltageInput@(i+1)-joltageInput@i,1]
+}
+
+println["Part I: The sum of the differences of 1 and differences of 3 is: " + (joltageDiffDict@1 * joltageDiffDict@3)]
+
+// Part II
+// Create a new array for tracking the path steps between array items in joltageInput.
+joltageLength = length[joltageInput]
+joltageTrack = makeArray[[joltageLength],0]
+joltageTrack@0 = 1 // All items in the array are set to 0. The frst needs to be 1 to represent the connection from the outlook.
+
+// Loop through each element in the joltageInput array and add up the total paths leading up to it.
+for i = 1 to joltageLength-1
+{
+	currentVal = joltageInput@i
+	// Any preceding element that is between 1 and 3 less than the current value can lead to that value.
+	for x = 1 to 3
+	{
+		searchVal = currentVal - x
+		searchIndex = joltageInput.indexOf[searchVal]
+		// If the search value is not found, indexOf returns a -1
+		if searchIndex != -1
+		{
+			/*
+			This takes the total paths leading at the searchIndex and adds them to the total paths at the current index (i)
+			If values are 4,5,7,9,10
+			There are two paths to get to 7 (4+3 and 5+2)
+			Then this means there 2 paths to get to 9 (4+3 = 7, 7+2 = 9) and (5+2=7, 7+2 = 9)
+			10 can be reached from 7 (+3) or 9 (+1)
+			7 has two paths to reach it 9 also has two paths to reach it so the total paths that can reach 10 are 4.
+			This code takes the starting value at the current index and adds the total from the prior index.
+			*/
+			joltageTrack@i = joltageTrack@i + joltageTrack@searchIndex
+		}
+	}
+}
+
+// Grab the last value from the array which will be the sum of all possible combinations. (This will be a really large number. Mine was 400 trillion plus.)
+println["Part II: Total number of adapter configurations is: " + joltageTrack.pop[]]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
