@@ -1,0 +1,449 @@
+// Solution for 2020 Day 11: Seating System
+// https://adventofcode.com/2020/day/11
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+//Sample Input
+seatsInput = ["L.LL.LL.LL",
+	"LLLLLLL.LL",
+	"L.L.L..L..",
+	"LLLL.LL.LL",
+	"L.LL.LL.LL",
+	"L.LLLLL.LL",
+	"..L.L.....",
+	"LLLLLLLLLL",
+	"L.LLLLLL.L",
+	"L.LLLLL.LL"]
+
+/*
+// Sample solutions for reference. Nothing is done with these variables in the code.
+Solution1 = 37
+Solution2 = 26
+*/
+
+// Import the input file using the lines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+seatsInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_11_input.txt"]
+
+// Rows and Cols are bckwards but I don't want to rewrite all my code.
+// So rows in this case are seats from top to bottom and columns are from left to right.
+seatRows = length[seatsInput]
+seatCols = length[seatsInput@0]
+
+// Create a dictionary of seat values.
+rowCounter = 0
+seatGrid = new dict
+
+// Loop through the seats.
+for seatsStr = seatsInput
+{
+	rowCounter = rowCounter + 1
+	columnCounter = 0
+	// Break the string into individual characters to be looped through.
+	seatsArr = charList[seatsStr]
+	for seat = seatsArr
+	{
+		columnCounter = columnCounter + 1
+		arr = [rowCounter,columnCounter]
+		// Convert the symbols within the string to 0s for empty seats and -1s for floor space so they can be summed at the end of the problem.
+		// -1 isn't summed... I just skip it when summing.
+		if seat == "L"
+			seatGrid@arr = 0
+		else
+			seatGrid@arr = -1
+	}
+}
+
+// We use the same input in Part II but the dictionary gets heavily modified in Part I so this is a copy of the original for later.
+seatGrid2 = deepCopy[seatGrid]
+
+// Create toggle to track changes each cycle.
+seatToggle = deepCopy[seatGrid]
+
+// Rules for reference.
+/*
+If a seat is empty (L) and there are no occupied seats adjacent to it, the seat becomes occupied.
+If a seat is occupied (#) and four or more seats adjacent to it are also occupied, the seat becomes empty.
+Otherwise, the seat's state does not change.
+*/
+
+i = 0
+noChange = false
+do
+{
+	i = i+1
+	// ChangedSum is used to track the total number of changes in an iteration.
+	changedSum = 0
+
+	// Loop through all possible rows and columns.
+	multifor[x1,y1] = [new range[1,seatRows], new range[1,seatCols]]
+	{
+		// tval is the togglevalue
+		tval = [x1,y1]
+
+		// Skip any spots that are designated as floor space.
+		if seatGrid@tval == -1 // Skip if floor space
+		{
+			next
+		}
+
+		// min and max logic to account for edges.
+		xmax = min[x1+1,seatRows]
+		xmin = max[x1-1,1]
+		ymax = min[y1+1,seatCols]
+		ymin = max[y1-1,1]
+
+		// Set the range of the surrounding seats.
+		xSeats = new range[xmin,xmax]
+		yseats = new range[ymin,ymax]
+
+		// Starting values for sums and status.
+		seatsSum = 0
+		status = 0
+
+		// Loop through the surrounding seats.
+		multifor[x2,y2] = [xSeats,yseats]
+		{
+			seats = [x2,y2]
+			if seatGrid@seats == -1 // Skip if floor space
+			{
+				next
+			}
+			// Capture the status of the current seat (from the outside multifor loop).
+			if x2 == x1 && y2 == y1
+			{
+				status = seatGrid@seats
+			} else
+			{
+				// Add the values of the surrounding seats to the seatsSum variable.
+				seatsSum = seatsSum + seatGrid@seats
+			}
+		}
+
+		// Seat becomes occupied if no neighboring seats are occupied.
+		if status == 0 && seatsSum == 0
+		{
+			seatToggle@tval = 1
+			changedSum = changedSum + 1
+		}
+		// Occupied seat becomes empty if 4 adjacent seats are occupied.
+		if status == 1 && seatsSum >= 4
+		{
+			seatToggle@tval = 0
+			changedSum = changedSum + 1
+		}
+	}
+	// After all seats have been evaluated in the multifor statement, loop through the toggle values and update the seats with the new values.
+	for toggleKeys = keys[seatToggle]
+	{
+		val = seatToggle@toggleKeys
+		seatGrid@toggleKeys = val
+	}
+	// If the changedSum variable is 0 that means no changes happened this iteration and we can break the outer loop.
+	if changedSum == 0
+	{
+		noChange = true
+	}
+} until noChange == true
+
+// Set variable for counting total occupied seats. Loop through all values in the seat grid to sum the total.
+totalSeatsSum = 0
+for seatKeys = keys[seatGrid]
+{
+	if seatGrid@seatKeys == -1 // Floor space. No seat here to be occupied or not.
+	{
+		next
+	}
+	totalSeatsSum = totalSeatsSum + seatGrid@seatKeys
+}
+
+println["Part I: The number of occupied seats is: $totalSeatsSum"]
+
+// Part II
+// Reset the toggle with seatGrid2 - the copy of the original seatGrid.
+seatToggle = deepCopy[seatGrid2]
+
+i = 0
+noChange = false
+do
+{
+	i = i+1
+	// ChangedSum is used to track the total number of changes in an iteration.
+	changedSum = 0
+	// Loop through all possible seats in the grid.
+	multifor[x1,y1] = [new range[1,seatRows], new range[1,seatCols]]
+	{
+		// tval is togglevalue
+		tval = [x1,y1]
+
+		//println["seatGrid Val is " + seatGrid@([x1,y1])]
+		if seatGrid2@tval == -1 // Skip if floor space
+		{
+			next
+		}
+
+		// min and max logic to account for edges.
+		xmax = min[x1+1,seatRows]
+		xmin = max[x1-1,1]
+		ymax = min[y1+1,seatCols]
+		ymin = max[y1-1,1]
+
+		// Starting values for sums and status.
+		seatsSum = 0
+		status = seatGrid2@tval
+
+		// The next section looks for the nearest available seat in 8 directions.
+		// This could probably all be much more efficient then looking in each direction individually.
+		// In each case, the code first checks if the starting value is on the edge of the grid and skips if moving from that direction.
+		// Next seat below current seat.
+		if x1 < seatRows
+		{
+			for x2 = xmax to seatRows
+			{
+				seats = [x2,y1]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}	
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+		// Next seat above current seat.
+		if x1 > 1
+		{
+			for x2 = xmin to 1 step -1
+			{
+				seats = [x2,y1]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+		// Next seat to the right of the current seat.
+		if y1 < seatCols
+		{
+			for y2 = ymax to seatCols
+			{
+				seats = [x1,y2]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+		// Next seat to the left of the current seat.
+		if y1 > 1
+		{
+			for y2 = ymin to 1 step -1
+			{
+				seats = [x1,y2]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+		// Next seat to the diagonal (Up Right)
+		if x1 < seatRows && y1 < seatCols
+		{
+			y2 = y1
+			for x2 = xmax to seatRows
+			{
+				y2 = y2+1
+				// breaks on reaching the edge of the grid either on x or y.
+				if y2 > seatCols
+				{
+					break
+				}
+				seats = [x2,y2]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+		// Next seat to the diagonal (Up Left)
+		if x1 < seatRows && y1 > 1
+		{
+			y2 = y1
+			for x2 = xmax to seatRows
+			{
+				y2 = y2-1
+				// breaks on reaching the edge of the grid either on x or y.
+				if y2 < 1
+				{
+					break
+				}
+				seats = [x2,y2]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}		
+			}
+		}
+		// Next seat to the diagonal (Down Right)
+		if x1 > 1 && y1 < seatCols
+		{
+			y2 = y1
+			for x2 = xmin to 1 step - 1
+			{
+				y2 = y2+1
+				// breaks on reaching the edge of the grid either on x or y.
+				if y2 > seatCols
+				{
+					break
+				}
+				seats = [x2,y2]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+		// Next seat to the diagonal (Down Left)
+		if x1 > 1 && y1 > 1
+		{
+			y2 = y1
+			for x2 = xmin to 1 step - 1
+			{
+				y2 = y2-1
+				// breaks on reaching the edge of the grid either on x or y.
+				if y2 < 1
+				{
+					break
+				}
+				seats = [x2,y2]
+				seatVal = seatGrid2@seats
+				if seatVal == -1 // Skip if floor space
+				{
+					next
+				}
+				if seatVal == 0
+				{
+					break
+				}
+				if seatVal == 1
+				{
+					seatsSum = seatsSum + seatVal
+					break
+				}	
+			}
+		}
+
+		// Seat is occupied if no neighboring seats are occupied.
+		if status == 0 && seatsSum == 0
+		{
+			seatToggle@tval = 1
+			changedSum = changedSum + 1
+		}
+		// Occupied seat becomes empty if 5 adjascent seats are occupied.
+		if status == 1 && seatsSum >= 5
+		{
+			seatToggle@tval = 0
+			changedSum = changedSum + 1
+		}
+	}
+	// Loop through toggle values and update the seats with the new values.
+	for toggleKeys = keys[seatToggle]
+	{
+		val = seatToggle@toggleKeys
+		seatGrid2@toggleKeys = val
+	}
+
+	// See if anything changed on this iteration.
+	if changedSum == 0
+	{
+		noChange = true
+	}
+} until noChange == true
+
+// Set variable for counting total occupied seats. Loop through all values in the seat grid to sum the total.
+totalSeatsSum = 0
+for seatKeys = keys[seatGrid2]
+{
+	if seatGrid2@seatKeys == -1
+	{
+		next
+	}
+	totalSeatsSum = totalSeatsSum + seatGrid2@seatKeys
+}
+
+println["Part II occupied seats is $totalSeatsSum"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
