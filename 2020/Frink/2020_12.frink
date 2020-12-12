@@ -1,0 +1,124 @@
+// Solution for 2020 Day 12: Rain Risk
+// https://adventofcode.com/2020/day/12
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Sample Input
+directionsInput = ["F10",
+	"N3",
+	"F7",
+	"R90",
+	"F11"]
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Note that the variable name is the same as the sample input again. Comment out this line to run the sample input.
+directionsInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_12_input.txt"]
+
+// These are my numerical values for the heading directions. Used in a modulus operation later.
+/*
+0 N
+1 E
+2 S
+3 W
+*/
+
+// Creating heading variable with the starting value of 1 for East.
+heading = 1
+
+// Parse the directions into an array using regex to seperate the letter and number value.
+directions = new array
+for direction = directionsInput
+{
+	// Extract the instruction and the numerical value.
+	dir = direction =~ %r/^([NSEWLRF])(\d*)$/
+	dir@1 = parseInt[dir@1]
+	directions.push[dir]
+}
+
+// Set starting location of [0,0]
+// This will make it easy to determine the total Manhattan difference.
+// Then cycle through the directions and apply each rule.
+// I feel like I could have written a function or mapped something in place, but there aren't that many instructions so IF statements are easy enough.
+location = [0,0]
+for direction = directions
+{
+	// The ship will either move in a specific named direction or forward in the direction it is pointing.
+	if direction@0 == "N" || (direction@0 == "F" && heading == 0)
+		location@0 = location@0 - direction@1
+	if direction@0 == "S" || (direction@0 == "F" && heading == 2)
+		location@0 = location@0 + direction@1
+	if direction@0 == "W" || (direction@0 == "F" && heading == 3)
+		location@1 = location@1 - direction@1
+	if direction@0 == "E" || (direction@0 == "F" && heading == 1)
+		location@1 = location@1 + direction@1
+	if direction@0 == "L" || direction@0 == "R"
+	{
+		// Determine the number of times to rotate by divinding the valye by 90 (i.e. 270 becomes 3).
+		// Then add or substract that values from the current heading and apply a modulus to get the new heading.
+		rotation = (direction@1)/90
+		if direction@0 == "R"
+			heading = (heading + rotation) % 4
+		if direction@0 == "L"
+			heading = abs[(heading - rotation) % 4]
+	}
+}
+
+println["Part I: ship's Manhattan distance from its starting position is: " + abs[location@0] + abs[location@1]]
+
+// Part II
+// Reset the location array and add a new waypoint array.
+location = [0,0]
+waypoint = [-1,10] // Starting value is 1 unit north and 10 units east.
+// Loop the directions again applying the new rules.
+for direction = directions
+{
+	// NSEW commands all move the waypoint.
+	if direction@0 == "N"
+		waypoint@0 = waypoint@0 - direction@1
+	if direction@0 == "S"
+		waypoint@0 = waypoint@0 + direction@1
+	if direction@0 == "W"
+		waypoint@1 = waypoint@1 - direction@1
+	if direction@0 == "E"
+		waypoint@1 = waypoint@1 + direction@1
+	// F commands move the ship to the value of F multiplied by the waypoint position.
+	if direction@0 == "F"
+	{
+		location@0 = location@0 + (direction@1 * waypoint@0)
+		location@1 = location@1 + (direction@1 * waypoint@1)
+	}
+	// L and R rotate the waypoint. A 270 degree rotation in one direction is the same as a 90 degree rotation in the other.
+	// i.e. Left rotation of 5 South and 10 E becomes 5 East and 10 North.
+	// With a starting position of [0,0] I am calling N and W by negative values. So values will change from negative to positive as they rotate.
+	if (direction@0 == "L" && direction@1 == 90) || (direction@0 == "R" && direction@1 == 270)
+	{
+		waypointCopy = deepCopy[waypoint]
+		waypoint@0 = (waypointCopy@1) * -1
+		waypoint@1 = waypointCopy@0
+	}
+	if (direction@0 == "R" && direction@1 == 90) || (direction@0 == "L" && direction@1 == 270)
+	{
+		waypointCopy = deepCopy[waypoint]
+		waypoint@0 = waypointCopy@1
+		waypoint@1 = (waypointCopy@0) * -1
+	}
+	// 180 rotation is the same for either L and R. N becomes S and E becomes W (and vice versa).
+	// This means that negative values become positive and positive become negative.
+	if (direction@0 == "R" || direction@0 == "L") && direction@1 == 180
+	{
+		waypointCopy = deepCopy[waypoint]
+		waypoint@0 = (waypointCopy@0) * -1
+		waypoint@1 = (waypointCopy@1) * -1
+	}
+}
+
+println["Part II: ship's Manhattan distance from its starting position is: " + abs[location@0] + abs[location@1]]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
