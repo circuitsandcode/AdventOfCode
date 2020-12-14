@@ -14,6 +14,12 @@ directionsInput = ["F10",
 	"F7",
 	"R90",
 	"F11"]
+	
+/*
+// Sample solutions for reference. Nothing is done with these variables in the code.
+Solution1 = 25
+Solution2 = 286
+*/
 
 // Import the input file using the readLines function. This will import the file into an array.
 // The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
