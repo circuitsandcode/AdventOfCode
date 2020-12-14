@@ -1,0 +1,212 @@
+start = now[]
+
+// Sample
+x = 939
+y = "7,13,x,x,59,x,31,19"
+
+sampleSolution1 = 295
+sampleSolution2 = 1068781
+// CTH
+x = 1009310
+y = "19,x,x,x,x,x,x,x,x,x,x,x,x,37,x,x,x,x,x,599,x,29,x,x,x,x,x,x,x,x,x,x,x,x,x,x,17,x,x,x,x,x,23,x,x,x,x,x,x,x,761,x,x,x,x,x,x,x,x,x,41,x,x,13"
+
+// CNC
+x = 1000495
+y = "19,x,x,x,x,x,x,x,x,41,x,x,x,x,x,x,x,x,x,521,x,x,x,x,x,x,x,23,x,x,x,x,x,x,x,x,17,x,x,x,x,x,x,x,x,x,x,x,29,x,523,x,x,x,x,x,37,x,x,x,x,x,x,13"
+
+ya = split[",",y]
+println[ya]
+
+yd = new dict
+for yi = ya
+{
+   if yi == "x"
+   {
+      next
+   }
+   yv = parseInt[yi]
+   ycalc = (x/yv)*1.0
+   //println[ycalc]
+   yminutes = ceil[ycalc] * yv
+   yd@yv = yminutes
+}
+
+println[yd]
+
+minVals = [x*2,100000000]
+for ydi = yd.keys[]
+{
+   if yd@ydi < minVals@1
+   {
+      minVals@1 = yd@ydi
+      minVals@0 = ydi
+   }
+}
+
+println["Bus " + minVals@0 + " is " + (minVals@1 - x) + " minutes out."]
+println["Total is " + minVals@0 * (minVals@1 - x)]
+
+/*
+   make an array of minutes 1,2,5,6,8
+   make a function that takes starting minutes
+   calculates the ceil like above to determine next minute for each value
+   success of making it through the whole thing.
+*/
+
+// Part II
+
+seqMin = new array
+seqBus = new array
+startMin = 0
+for yi = ya
+{
+	if yi != "x"
+	{
+		seqMin.push[startMin]
+		seqBus.push[parseInt[yi]]
+	}
+	startMin = startMin+1
+}
+
+println[seqMin]
+println[seqBus]
+busLength = length[seqBus]
+println["The length is $busLength"]
+
+multiplier = 1
+counter = 1
+workingRange = [0,0]
+
+minimumMinuteVal = 100000000000000 // Problem gave 100,000,000,000,000
+//counter = (ceil[(minimumMinuteVal/seqBus@0)*1.0]*seqBus@0)-1
+println["Starting on $counter"]
+ix = 0
+
+minPosition = 1
+
+seqCheck = false
+while seqCheck == false
+{
+	counter = counter + multiplier
+	startingVal = counter * seqBus@0
+	//println["counter is $counter"]
+	//println["multiplier is $multiplier"]
+	//println["startingVal is $startingVal"]
+	checkVal = startingVal // Maybe needed
+	ix = ix+1
+	if ix % 1000000 == 0
+	//if ix % 1 == 0
+	{
+		println["startingVal is $startingVal and minPosition is $minPosition"]
+	}
+	for position = 1 to busLength-1
+	{
+		//=IF(MOD((C5+D$2),D$3)=0,CEILING.MATH(C5/D$3)*D$3,0)
+		//=IF(MOD(($K29+L$2),L$3)=0,CEILING.MATH(K29/L$3)*L$3,0)
+		if (startingVal + seqMin@position) % seqBus@position != 0
+		{
+			break
+		}
+		if (startingVal + seqMin@position) % seqBus@position == 0 && workingRange@0 != workingRange@1 && position < busLength-1 && minPosition == position
+		{
+			workingRange@1 = counter
+			multiplier = workingRange@1 - workingRange@0
+			workingRange@0 = workingRange@1
+			minPosition = minPosition + 1
+			break
+		}
+		if (startingVal + seqMin@position) % seqBus@position == 0 && workingRange@0 == workingRange@1 && position < busLength-1 && minPosition == position
+		{
+			workingRange@0 = counter
+			//println[workingRange]
+		}
+		if (startingVal + seqMin@position) % seqBus@position == 0 && position == busLength-1
+		{
+			println["Part II: Starting minute is: $startingVal"]
+			seqCheck = true
+		}
+	}
+	
+}
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
+
+//minimumMinuteVal = 1000000 // Starting Val
+//minimumMinuteVal = 100000000000000 // Problem gave 100,000,000,000,000
+
+
+/*
+multiplier = seqBus@0
+i = 0
+for busIndex = 0 to length[seqBus]-1
+{
+	while true
+	{
+		if i + busIndex
+	}
+}
+
+  buses.forEach(([bus, busIndex]) => {
+    while (true) {
+      if ((i + busIndex) % bus === 0) {
+        multiplier *= bus;
+        break;
+      }
+      i += multiplier;
+    }
+
+
+//minimumMinuteVal = 0
+minCalc = (minimumMinuteVal/seqBus@0)*1.0
+startingMinVal = ceil[minCalc] * seqBus@0
+
+println[startingMinVal]
+
+// Define function
+calcMin[busArr,minArr,currentPosition,startingMin] :=
+{
+	minTotal = startingMin + minArr@currentPosition
+	if minTotal % busArr@currentPosition == 0
+		return true
+	else
+		return false
+	//nextDeparture = ceil[minCalc] * busArr@0
+	//return nextDeparture
+}
+
+ix = 0
+
+seqCheck = false
+while seqCheck == false
+{
+	for position = 1 to busLength-1
+	{
+		busCheck = calcMin[seqBus,seqMin,position,startingMinVal]
+		if busCheck == false
+		{
+			startingMinVal = startingMinVal + seqBus@0
+			//println[startingMinVal]
+			ix = ix+1
+			if ix % 1000000 == 0
+			{
+				println["$ix iteration is $startingMinVal"]
+			}
+			break
+		}
+		if position == busLength-1
+		{
+			println["Final Val is " + startingMinVal]
+			seqCheck = true
+		}
+	}
+}
+
+
+//startingMinVal = calcMin[seqBus,seqMin,position,startingMinVal]
+//println[startingMinVal]
+
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
+*/
