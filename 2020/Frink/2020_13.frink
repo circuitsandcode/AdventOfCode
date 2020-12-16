@@ -1,112 +1,140 @@
 start = now[]
 
-// Sample
-x = 939
-y = "7,13,x,x,59,x,31,19"
-
-sampleSolution1 = 295
-sampleSolution2 = 1068781
-// CTH
-x = 1009310
-y = "19,x,x,x,x,x,x,x,x,x,x,x,x,37,x,x,x,x,x,599,x,29,x,x,x,x,x,x,x,x,x,x,x,x,x,x,17,x,x,x,x,x,23,x,x,x,x,x,x,x,761,x,x,x,x,x,x,x,x,x,41,x,x,13"
-
-// CNC
-x = 1000495
-y = "19,x,x,x,x,x,x,x,x,41,x,x,x,x,x,x,x,x,x,521,x,x,x,x,x,x,x,23,x,x,x,x,x,x,x,x,17,x,x,x,x,x,x,x,x,x,x,x,29,x,523,x,x,x,x,x,37,x,x,x,x,x,x,13"
-
-ya = split[",",y]
-println[ya]
-
-yd = new dict
-for yi = ya
-{
-   if yi == "x"
-   {
-      next
-   }
-   yv = parseInt[yi]
-   ycalc = (x/yv)*1.0
-   //println[ycalc]
-   yminutes = ceil[ycalc] * yv
-   yd@yv = yminutes
-}
-
-println[yd]
-
-minVals = [x*2,100000000]
-for ydi = yd.keys[]
-{
-   if yd@ydi < minVals@1
-   {
-      minVals@1 = yd@ydi
-      minVals@0 = ydi
-   }
-}
-
-println["Bus " + minVals@0 + " is " + (minVals@1 - x) + " minutes out."]
-println["Total is " + minVals@0 * (minVals@1 - x)]
+// Sample Input
+departureTimesInput = ["939","7,13,x,x,59,x,31,19"]
 
 /*
-   make an array of minutes 1,2,5,6,8
-   make a function that takes starting minutes
-   calculates the ceil like above to determine next minute for each value
-   success of making it through the whole thing.
+// Sample solutions for reference. Nothing is done with these variables in the code.
+Solution1 = 295
+Solution2 = 1068781
 */
+
+
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Note that the variable name is the same as the sample input again. Comment out this line to run the sample input.
+departureTimesInput = readLines["file:../Projects/AdventOfCode/2020/InputFiles/2020_13_input.txt"]
+
+// The first line is the time you can leave
+departureTime = parseInt[departureTimesInput@0]
+
+// Create an array of the buses and x spaces for times with no departures.
+busTimesArray = split[",",departureTimesInput@1]
+
+// Create a dictionary and populate it with the time the bus will leave after your departure time.
+busTimesDict = new dict
+for busTimesItem = busTimesArray
+{
+	// Skip any x values.
+	if busTimesItem == "x"
+	{
+		next
+	}
+	busTimesValue = parseInt[busTimesItem]
+	busTimesCalc = (departureTime/busTimesValue)*1.0
+	busTimesMinutes = ceil[busTimesCalc] * busTimesValue
+	busTimesDict@busTimesValue = busTimesMinutes
+}
+
+// Create an array to track the minimum wait time.
+// I'm starting out with a value of departureTime*2 just so we'll have a value to compare mins against that is guaranteed to be higher that the other numbers.
+// The first spot in the array is for the bus number. Starting with 0.
+minVals = [0,departureTime*2]
+// Loop through and compare each value in the dictionary to get the minium.
+for busTimesDictKey = busTimesDict.keys[]
+{
+   if busTimesDict@busTimesDictKey < minVals@1
+   {
+      minVals@1 = busTimesDict@busTimesDictKey
+      minVals@0 = busTimesDictKey
+   }
+}
+
+println["Part I: The time waited (" +  minVals@1 - departureTime + " minutes) multiplied by bus # (" + minVals@0 + ") is: " + minVals@0 * (minVals@1 - departureTime)]
 
 // Part II
 
+// Create arrays and variables used in Part II
 seqMin = new array
 seqBus = new array
 startMin = 0
-for yi = ya
+// Populate two arrays. The first is a sequence of departure minutes (based on position in the Input file. Xs add a minute that no bus runs.
+// The second array is bus numbers.
+// The two arrays should line up so that seqMin@2 will be the minutes after the first bus that we want to see seqBus@2 depart.
+for busTimesItem = busTimesArray
 {
-	if yi != "x"
+	if busTimesItem != "x"
 	{
 		seqMin.push[startMin]
-		seqBus.push[parseInt[yi]]
+		seqBus.push[parseInt[busTimesItem]]
 	}
 	startMin = startMin+1
 }
 
-println[seqMin]
-println[seqBus]
+// Grab the length of the bus array for easy reference later.
 busLength = length[seqBus]
-println["The length is $busLength"]
 
+// Set variables used by Part II
+/*
+I am building a range of minimum and maxium values between matching timestamps for each position in the bus array.
+The multiplier is edited based on this range to only starting positions that generate the required departure times.
+This is then added to the counter.
+For example:
+The first bus departs every 3 minutes
+the second bus departs every 5 minutes
+the third bus departs every 13 minutes
+The loop will start by looking for the range of times that match bus 1 and 2.
+In this case, the first bus departs on the following iterations:
+1 - 3 minutes
+2 - 6 minutes
+3 - 9 minutes
+4 - 12 minutes
+5 - 15 minutes
+6 - 18 minutes
+7 - 21 minutes
+8 - 24 minutes
+
+The second bus leaves on the following itterations
+1 - 5 minutes
+2 - 10 minutes
+3 - 15 minutes
+4 - 20 minutes
+5 - 25 minutes
+
+The times that match (a departure of 1 minute in between) are
+First bus itteration: 3 at 9 minutes with the second bus leaving at 10 minutes
+First bus itteration: 8 at 24 minutes with the second bus leaving at 25 minutes
+This cycle of values will repeat with the second bus departing one minute after the first every 5 departures.
+The code will update the workingRange with the starting and ending iteration of the first bus for those matches ([3,8] in this case)
+When both values are captured, the multiplier variable is updated to the difference between them (5 in this case)
+Going forward, the code only needs to iterate through every 5th departure of the first bus and will start looking for the similar range for the third bus.
+This process repeats until we have a start time for the last bus - when this is found, the solution is the departure time of the first bus for that cycle.
+This process greatly limits the number of bus departure times we need to cycle through.
+*/
 multiplier = 1
 counter = 1
 workingRange = [0,0]
 
-minimumMinuteVal = 100000000000000 // Problem gave 100,000,000,000,000
-//counter = (ceil[(minimumMinuteVal/seqBus@0)*1.0]*seqBus@0)-1
-println["Starting on $counter"]
-ix = 0
-
+// Set the minPosition variable. This will be updated with the position in the array of other buses.
 minPosition = 1
 
 seqCheck = false
 while seqCheck == false
 {
+	// The current counter represents the bus departure iteration. By using the multiplier value, we can skip departures that we know won't match the pattern.
 	counter = counter + multiplier
 	startingVal = counter * seqBus@0
-	//println["counter is $counter"]
-	//println["multiplier is $multiplier"]
-	//println["startingVal is $startingVal"]
-	checkVal = startingVal // Maybe needed
-	ix = ix+1
-	if ix % 1000000 == 0
-	//if ix % 1 == 0
-	{
-		println["startingVal is $startingVal and minPosition is $minPosition"]
-	}
+	// Loop through each cycle of bus departure times.
 	for position = 1 to busLength-1
 	{
-		//=IF(MOD((C5+D$2),D$3)=0,CEILING.MATH(C5/D$3)*D$3,0)
-		//=IF(MOD(($K29+L$2),L$3)=0,CEILING.MATH(K29/L$3)*L$3,0)
+		// Check each bus that leaves after the first one to see if it matches the departure time of the first book plus the minutes in between them.
+		// If we find a non matching departure time at any point in the array, exit the array.
 		if (startingVal + seqMin@position) % seqBus@position != 0
 		{
 			break
 		}
+		// Update the workingRange and multiplier values when the second match in a new departure pattern is found.
+		// Update the minPosition so that we only update the range for the next bus departure.
 		if (startingVal + seqMin@position) % seqBus@position == 0 && workingRange@0 != workingRange@1 && position < busLength-1 && minPosition == position
 		{
 			workingRange@1 = counter
@@ -115,98 +143,19 @@ while seqCheck == false
 			minPosition = minPosition + 1
 			break
 		}
+		// Update the workingRange and multiplier values when the first match in a new departure pattern is found.
 		if (startingVal + seqMin@position) % seqBus@position == 0 && workingRange@0 == workingRange@1 && position < busLength-1 && minPosition == position
 		{
 			workingRange@0 = counter
-			//println[workingRange]
 		}
+		// If we find a matching departure pattern for the last bus on the list, print the result and exit the loop.
 		if (startingVal + seqMin@position) % seqBus@position == 0 && position == busLength-1
 		{
 			println["Part II: Starting minute is: $startingVal"]
-			seqCheck = true
+			seqCheck = true // Set the check value to true to exit the loop.
 		}
 	}
-	
 }
 
 end = now[]
 println["Program run time: " + ((end - start)*1.0 -> "seconds")]
-
-//minimumMinuteVal = 1000000 // Starting Val
-//minimumMinuteVal = 100000000000000 // Problem gave 100,000,000,000,000
-
-
-/*
-multiplier = seqBus@0
-i = 0
-for busIndex = 0 to length[seqBus]-1
-{
-	while true
-	{
-		if i + busIndex
-	}
-}
-
-  buses.forEach(([bus, busIndex]) => {
-    while (true) {
-      if ((i + busIndex) % bus === 0) {
-        multiplier *= bus;
-        break;
-      }
-      i += multiplier;
-    }
-
-
-//minimumMinuteVal = 0
-minCalc = (minimumMinuteVal/seqBus@0)*1.0
-startingMinVal = ceil[minCalc] * seqBus@0
-
-println[startingMinVal]
-
-// Define function
-calcMin[busArr,minArr,currentPosition,startingMin] :=
-{
-	minTotal = startingMin + minArr@currentPosition
-	if minTotal % busArr@currentPosition == 0
-		return true
-	else
-		return false
-	//nextDeparture = ceil[minCalc] * busArr@0
-	//return nextDeparture
-}
-
-ix = 0
-
-seqCheck = false
-while seqCheck == false
-{
-	for position = 1 to busLength-1
-	{
-		busCheck = calcMin[seqBus,seqMin,position,startingMinVal]
-		if busCheck == false
-		{
-			startingMinVal = startingMinVal + seqBus@0
-			//println[startingMinVal]
-			ix = ix+1
-			if ix % 1000000 == 0
-			{
-				println["$ix iteration is $startingMinVal"]
-			}
-			break
-		}
-		if position == busLength-1
-		{
-			println["Final Val is " + startingMinVal]
-			seqCheck = true
-		}
-	}
-}
-
-
-//startingMinVal = calcMin[seqBus,seqMin,position,startingMinVal]
-//println[startingMinVal]
-
-
-end = now[]
-println["Program run time: " + ((end - start)*1.0 -> "seconds")]
-*/
