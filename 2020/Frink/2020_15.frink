@@ -1,0 +1,69 @@
+// Solution for 2020 Day 15: Rambunctious Recitation
+// https://adventofcode.com/2020/day/15
+// Written in Frink by Chris Hansen
+// Website: https://circuitsandcode.wehappyfew.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Sample Input
+inputStr = "0,3,6"
+
+/*
+// Sample solutions for reference. Nothing is done with these variables in the code.
+10Iterations = 0
+Solution1 = 436
+Solution2 = 175594
+*/
+
+// Import the input file using the read function. This will import the file into a string.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+// Note that the variable name is the same as the sample input again. Comment out this line to run the sample input.
+inputStr = strInput = read["file:../Projects/AdventOfCode/2020/InputFiles/2020_15_input.txt"]
+
+// Split the string into an array on every comma.
+inputArr = split[",",inputStr]
+
+// Variable for the number of iterations to go though. These vary based on the part of the question you're doing.
+//iterations = 10 // sample
+//iterations = 2020 // Part I
+iterations = 30000000 // Part II
+
+// Create a dictionary to store the last spoken value and the last two times they were said.
+// To start with, this will be populated based on where they appeared in the starting input.
+memoryDict = new dict
+for i = 0 to length[inputArr]-1
+{
+	inputArr@i = parseInt[inputArr@i] // Convert string values to int.
+	arr = [i+1,i+1] // Each value will be the last two positions a number appeared. To start with, these values will be the current position.
+	memoryDict@(inputArr@i) = arr.shallowCopy[]
+}
+
+// Each turn, we'll get the last value "spoken". To start with, it is just the last value in the input array.
+currentVal = last[inputArr]
+
+// Loop for the number of iterations specified. 
+for i = length[inputArr] + 1 to iterations
+{
+	// The current value is the difference between when the two times the previous value was spoken.
+	// Grab the last two positions of the old current value and assign the difference to the same variable
+	currentVal = memoryDict@currentVal@1 - memoryDict@currentVal@0
+	// If this value exists in the dictionary already, shift it's last two values to move the most recent into the older position and add the current iteration.
+	if memoryDict.containsKey[currentVal]
+	{
+		arr = [memoryDict@currentVal@1,i]
+		memoryDict@currentVal = arr.shallowCopy[]
+	} else // If the number isn't in the dictionary, make a new key with the current iteration as both values.
+	{
+		arr = [i,i]
+		memoryDict@currentVal = arr.shallowCopy[]
+	}
+}
+
+// Print the result.
+println["The value spoken on turn $iterations is $currentVal"]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
