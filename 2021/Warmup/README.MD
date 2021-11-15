@@ -18,8 +18,9 @@ For example, if the input was:
 
 The correct solution would be -21077.
 
-## My Solution
-My first programming language as a kid was GW-BASIC. I was feeling a bit nostalgic so I wrote my solution in [Yabasic](http://2484.de/yabasic/) which I have installed on a cheap [Orange Pi Zero](http://www.orangepi.org/orangepizero/).
+## My Solutions
+My first programming language as a kid was GW-BASIC. I was feeling a bit nostalgic so I wrote my solution in [Yabasic](http://2484.de/yabasic/) which I have installed on a cheap [Orange Pi Zero](http://www.orangepi.org/orangepizero/).  
+I also programmed a solution in [Frink](https://frinklang.org/), which is one of my longtime favorite languages.
 
 ## Example Input Files
 I've included the input files for anyone who would like to try out their own solution.
