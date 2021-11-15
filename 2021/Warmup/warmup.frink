@@ -9,11 +9,12 @@
 start = now[]
 
 // Prepare Sample Input
-sampleInput = [4118,2666,7528,3301,3856,2756,4864,3857,6329,8776]
+sampleInput = ["4118","2666","7528","3301","3856","2756","4864","3857","6329","8776"]
 sampleSolution = -21077
 
-// Create a function to determine if value is even
-isEven = { |x| x mod 2 == 0 }
+// Import the input file using the readLines function. This will import the file into an array.
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+strInput = readLines["file:../Projects/AdventOfCode/2021/InputFiles/Warmup/00-input.txt"]
 
 // Create function for solving the puzzle.
 oddevensum[input,sampleSolution = 0] :=
@@ -24,32 +25,48 @@ oddevensum[input,sampleSolution = 0] :=
   
   for y = input
   {
-    if y mod 2 == 0
+    yInt = parseInt[y]
+    if yInt mod 2 == 0
     {
-      evenSum = evenSum + y
+      evenSum = evenSum + yInt
     } else
     {
-      oddSum = oddSum + y
+      oddSum = oddSum + yInt
     }
   }
 
   // Determine the result
   resultSum = oddSum - evenSum
+
+  // Print the result
+  if sampleSolution != 0
+  {
+    println["Sample Solution:"] 
+  } else
+  {
+    println["Input File Solution:"]
+  }
   println["The result is " + toString[resultSum] + "."]
 
   // Testing sample solution
-	 if sampleSolution != 0
+  if sampleSolution != 0
   {
     if sampleSolution == resultSum
-	   {
+    {
       println["The Sample Solution is correct!"]
-	   } else
-	   {
-		    println["The Sample Solution is incorrect."]
-	   }
-	 }
-	 println[""]
+    } else
+    {
+      println["The Sample Solution is incorrect."]
+    }
+    }
+   println[""]
 }
 
 // Test the sample solution
 oddevensum[sampleInput,sampleSolution]
+
+// Solve for the input file
+oddevensum[strInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
