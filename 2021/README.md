@@ -1,7 +1,7 @@
-# Advent of Code Solutions for 2020 Problems
+# Advent of Code Solutions for 2021 Problems
 
 Full text and details of the problems can be found here:
-[Advent of Code 2020](https://adventofcode.com/2020)
+[Advent of Code 2021](https://adventofcode.com/2021)
 
 All solutions are by Chris at [Circuits and Code](https://www.circuitsandcode.net/).
 

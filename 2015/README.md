@@ -3,7 +3,7 @@
 Full text and details of the problems can be found here:
 [Advent of Code 2015](https://adventofcode.com/2015)
 
-All solutions are by Chris at [Circuits and Code](https://circuitsandcode.wehappyfew.net/).
+All solutions are by Chris at [Circuits and Code](https://www.circuitsandcode.net/).
 
 ## Programming Languages Used
 [Frink](https://frinklang.org/) (All solutions complete)
