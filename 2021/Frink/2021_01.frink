@@ -1,0 +1,82 @@
+// Solution for 2021 Day 1: Sonar Sweep
+// https://adventofcode.com/2021/day/1
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = [199,200,208,210,200,207,240,269,260,263]
+sampleSolution1 = 7
+sampleSolution2 = 5
+
+// Create function for solving Part I of the puzzle. With optional sample solution
+depthIncrease[partNum,depthReadings,sampleSolution = 0] :=
+{
+	// Set variable to increment every depth increase - Part I`
+	depthIncreaseCount = 0
+	// Set variable to increment every three-measurement depth increase - Part II
+	depth3MeasureIncreaseCount = 0
+	// Identify the position of the second to last item in the array so we can always compare the next one
+	depthReadingLength = length[depthReadings] - 2
+
+	// Loop through the Depth Values
+	for depth = 0 to depthReadingLength
+	{
+		if depthReadings@(depth + 1) > depthReadings@depth
+		{
+			depthIncreaseCount = depthIncreaseCount + 1
+			// println["Depth Increase Counter is: $depthIncreaseCount"]
+		}
+		if sum[slice[depthReadings,depth+1,depth+4]] > sum[slice[depthReadings,depth,depth+3]]
+		{
+			depth3MeasureIncreaseCount = depth3MeasureIncreaseCount + 1
+		}
+	}
+	
+	// Testing sample solution
+	if sampleSolution != 0
+	{
+		if sampleSolution == depthIncreaseCount || sampleSolution == depth3MeasureIncreaseCount
+		{
+			println["The Sample Solution is correct!"]
+		} else
+		{
+			println["The Sample Solution is incorrect."]
+		}
+	}
+	
+	// Return the output
+	return [partNum,depthIncreaseCount,depth3MeasureIncreaseCount]		
+}
+
+// Test the first sample solution
+result = depthIncrease["S1",sampleInput,sampleSolution1]
+if result@0 == "S1"
+	println["Part " + result@0 + ": The number of depth increases is: " + result@1 + "."]
+
+// Test the second sample solution
+result = depthIncrease["S2",sampleInput,sampleSolution2]
+if result@0 == "S2"
+	println["Part " + result@0 + ": The number of depth increases is: " + result@2 + "."]
+
+// Read the input file
+depthReadingInput = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_01_input.txt"]
+
+// Depth readings are brought in as strings from the readLines function. The parseInt function converts the values to interger.
+for depthReadingItem = rangeOf[depthReadingInput]
+{
+	depthReadingInput@depthReadingItem = parseInt[depthReadingInput@depthReadingItem]
+}
+
+// Process the input file
+result = depthIncrease["1 and 2",depthReadingInput]
+
+// Return the result
+println["Part " + result@0 + ": The number of depth increases is: " + result@1 + ". The number of three-measurement increases is: " + result@2 + "."]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
