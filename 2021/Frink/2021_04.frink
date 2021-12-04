@@ -189,8 +189,9 @@ bingoPlay[partNum,bingoBoardCount,bingoNumbers,bingoBoardsPlayArr,winningCombina
 }
 
 // Test Sample Input
+bingoBoardArr2 = deepCopy[bingoBoardsArr]
 bingoPlay[1,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations,sampleSolution1]
-bingoPlay[2,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations,sampleSolution2]
+bingoPlay[2,bingoBoardTotal,bingoNumbers,bingoBoardArr2,winningCombinations,sampleSolution2]
 
 // Read the input file and process it through all functions
 bingoInputArr = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_04_input.txt"]
@@ -198,12 +199,13 @@ bingoInputArr = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_04
 bingoNumbers = bingoNumbersParser[bingoInputArr]
 // Run the bingoParser function
 bingoBoardsArr = bingoParser[bingoInputArr]
+bingoBoardArr2 = deepCopy[bingoBoardsArr]
 // Count the boards
 bingoBoardTotal = length[bingoBoardsArr] - 1
 
 // Play the input boards - Part 1 and 2
 bingoPlay[1,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations]
-bingoPlay[2,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations]
+bingoPlay[2,bingoBoardTotal,bingoNumbers,bingoBoardArr2,winningCombinations]
 
 end = now[]
 println["Program run time: " + ((end - start)*1.0 -> "seconds")]
