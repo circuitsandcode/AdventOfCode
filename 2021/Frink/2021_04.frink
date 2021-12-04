@@ -1,0 +1,209 @@
+// Solution for 2021 Day 4: Giant Squid
+// https://adventofcode.com/2021/day/4
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = ["7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1",
+"",
+"22 13 17 11  0",
+" 8  2 23  4 24",
+"21  9 14 16  7",
+" 6 10  3 18  5",
+" 1 12 20 15 19",
+"",
+" 3 15  0  2 22",
+" 9 18 13 17  5",
+"19  8  7 25 23",
+"20 11 10 24  4",
+"14 21 16 12  6",
+"",
+"14 21 17 24  4",
+"10 16 15  9 19",
+"18  8 23 26 20",
+"22 11 13  6  5",
+" 2  0 12  3  7"]
+
+sampleSolution1 = 4512
+sampleSolution2 = 1924
+
+// Create a function to remove the first line of the input and convert it to an array of ints
+bingoNumbersParser[bingoNumbersInput] :=
+{
+	bingoNumbersStr = bingoNumbersInput.popFirst[]
+	bingoNumbersStrSplit = split[%r/\,/,bingoNumbersStr]
+	bingoNumbersReturn = map["parseInt",bingoNumbersStrSplit]
+	return bingoNumbersReturn
+}
+
+// Run the bingoNumbersParser function
+bingoNumbers = bingoNumbersParser[sampleInput]
+
+// Create function to parse the bingo boards and convert them to arrays
+bingoParser[bingoInput] :=
+{
+	bingoBoards = new array
+	boardPointer = -1 // Input starts with a blank line so we can increment immediately
+	linePointer = 0
+	for bingoLine = bingoInput
+	{
+		if bingoLine == ""
+		{
+			// Create a blank array
+			board = makeArray[[5,5],0]
+			bingoBoards.push[board]
+			// Increment counter for board
+			boardPointer = boardPointer + 1
+			// Reset line pointer for a new board
+			linePointer = 0
+		} else
+		{
+			bingoLineTrimmed = trim[bingoLine]
+			bingoLineStrArray = split[%r/\s+/,bingoLineTrimmed]
+			bingoLineItem = 0
+			for bingoLineStrItem = bingoLineStrArray
+			{
+				bingoBoards@boardPointer@linePointer@bingoLineItem = parseInt[bingoLineStrItem]
+				bingoLineItem = bingoLineItem + 1
+			}
+			linePointer = linePointer + 1
+		}
+	}
+	return bingoBoards
+}
+
+// Run the bingoParser function
+bingoBoardsArr = bingoParser[sampleInput]
+
+// Create an array of winning combination
+winningCombinations = new array
+for x = new range[0,4]
+{
+	xyCombination = new array
+	yxCombination = new array
+	for y = new range[0,4]
+	{
+		xyCombination.push[[x,y]]
+		yxCombination.push[[y,x]]
+	}
+	winningCombinations.push[xyCombination]
+	winningCombinations.push[yxCombination]
+}
+
+
+// Create a function to test for winning combinations
+bingoBoardCheck[bingboBoard,winningCombos] :=
+{
+	winningX = sum[["X","X","X","X","X"]]
+	OUTERLOOP:
+	for winningCombo = winningCombos
+	{
+		combo = new array
+		for winningValues = winningCombo
+		{
+			combo.push[bingboBoard@(winningValues@0)@(winningValues@1)]
+		}
+		if sum[combo] == winningX
+		{
+			return true
+			break OUTERLOOP
+		}
+	}
+	return false
+}
+
+// Count the total number of bingo boards
+bingoBoardTotal = length[bingoBoardsArr] - 1
+
+// Create a function to run the bingo numbers against the bingo boards
+bingoPlay[partNum,bingoBoardCount,bingoNumbers,bingoBoardsPlayArr,winningCombinations,sampleSolution = 0] :=
+{
+	bingoNumberPointer = 0
+	bingoWinningBoards = 0
+	winningBoards = new array
+	BINGOLOOP:
+	for bingoNumber = bingoNumbers
+	{
+		BINGOBOARDLOOP:
+		multifor[board,row,column] = [new range[0,bingoBoardCount], new range[0,4], new range[0,4]]
+		{
+			if winningBoards.contains[board]
+			{
+				next BINGOBOARDLOOP
+			}
+			if bingoBoardsPlayArr@board@row@column == bingoNumber
+			{
+				bingoBoardsPlayArr@board@row@column = "X"
+				if bingoNumberPointer > 5
+				{
+					bingoBoardWinningCheck = bingoBoardCheck[bingoBoardsPlayArr@board,winningCombinations]
+					if bingoBoardWinningCheck == true
+					{
+						winningBoards.push[board]
+						bingoWinningBoards = bingoWinningBoards + 1
+						if (partNum == 1 && bingoWinningBoards == 1) || (partNum == 2 && bingoWinningBoards == bingoBoardCount+1)
+						{
+							println["Part " + partNum]
+							println["Winner #" + bingoWinningBoards + " is board #" + board]
+							println["The winning number is: " + bingoNumber]
+							TotalRemainingBoardVal = 0
+							multifor[rowVal,colVal] = [new range[0,4], new range[0,4]]
+							{
+								TotalRemainingBoardVal = TotalRemainingBoardVal + (bingoBoardsPlayArr@board@rowVal@colVal == "X" ? 0 : bingoBoardsPlayArr@board@rowVal@colVal)
+							}
+							// Uncomment code below if you'd like to see the winning board.
+							/*
+							println["Winning Board:"]
+							for bv = bingoBoardsPlayArr@board
+							{
+								println[bv]
+							}
+							*/
+							println["The total remaining value on the board is: " + TotalRemainingBoardVal]
+							println["The combination of winning number and board remaining value is: " + (bingoNumber * TotalRemainingBoardVal)]
+							// Check Sample Solutions
+							if sampleSolution != 0
+							{
+								if sampleSolution == bingoNumber * TotalRemainingBoardVal
+								{
+									println["The Sample Solution for part " + partNum + " is correct!"]
+								} else
+								{
+									println["The Sample Solution for part " + partNum + " is incorrect!"]
+								}
+							}
+							println[]
+							break BINGOLOOP
+						}
+					}
+				}
+			}
+		}
+		bingoNumberPointer = bingoNumberPointer + 1
+	}
+}
+
+// Test Sample Input
+bingoPlay[1,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations,sampleSolution1]
+bingoPlay[2,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations,sampleSolution2]
+
+// Read the input file and process it through all functions
+bingoInputArr = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_04_input.txt"]
+// Run the bingoNumbersParser function
+bingoNumbers = bingoNumbersParser[bingoInputArr]
+// Run the bingoParser function
+bingoBoardsArr = bingoParser[bingoInputArr]
+// Count the boards
+bingoBoardTotal = length[bingoBoardsArr] - 1
+
+// Play the input boards - Part 1 and 2
+bingoPlay[1,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations]
+bingoPlay[2,bingoBoardTotal,bingoNumbers,bingoBoardsArr,winningCombinations]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
