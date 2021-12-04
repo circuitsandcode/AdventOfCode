@@ -1,0 +1,87 @@
+// Solution for 2021 Day 2: Dive!
+// https://adventofcode.com/2021/day/2
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = ["forward 5",
+"down 5",
+"forward 8",
+"up 3",
+"down 8",
+"forward 2"]
+sampleSolution1 = 150
+sampleSolution2 = 5
+
+// Create function for solving Part I of the puzzle. With optional sample solution
+subNavigation[navigationLines,sampleSolution1 = 0,sampleSolution2 = 0] :=
+{
+	horizontal = 0
+	depth = 0
+	aim = 0
+	depth2 = 0
+	for navigationLine = navigationLines
+	{
+		// Capture navigation values
+		[direction, value] = navigationLine =~ %r/(\w+) (\d+)/i
+		valueInt = parseInt[value]
+		if direction == "forward"
+		{
+			horizontal = horizontal + valueInt
+			depth2 = depth2 + (aim * valueInt)
+		}
+		if direction == "up"
+		{
+			depth = depth - valueInt
+			aim = aim - valueInt
+		}
+		if direction == "down"
+		{
+			depth = depth + valueInt
+			aim = aim + valueInt
+		}
+	}
+	// Solve for Part I
+	navigationResult1 = horizontal * depth
+	println["Horizontal is " + horizontal + " and depth is " + depth + ". Total is: " + navigationResult1 + "."]
+	// Testing sample solution
+	if sampleSolution1 != 0
+	{
+		if sampleSolution1 == navigationResult1
+		{
+			println["The First Sample Solution is correct!"]
+		} else
+		{
+			println["The First Sample Solution is incorrect."]
+		}
+	}
+	// Solve for Part II
+	navigationResult2 = horizontal * depth2
+	println["Horizontal is " + horizontal + " and depth is " + depth2 + ". Total is: " + (horizontal * depth2) + "."]
+	// Testing sample solution
+	if sampleSolution2 != 0
+	{
+		if sampleSolution2 == navigationResult2
+		{
+			println["The Second Sample Solution is correct!"]
+		} else
+		{
+			println["The Second Sample Solution is incorrect."]
+		}
+	}
+}
+
+// Test Sample Input
+// subNavigation[sampleInput,sampleSolution1]
+
+// Read the input file
+navigationInput = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_02_CTH_input.txt"]
+subNavigation[navigationInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

@@ -121,7 +121,7 @@ binaryReader[binaryLines,sampleSolution1 = 0,sampleSolution2 = 0] :=
 			println["The First Sample Solution is incorrect."]
 		}
 	}
-	println["The power consumption of the submarine is: " + (gammaRate * epsilonRate)]
+	println["The power consumption rating of the submarine is: " + (gammaRate * epsilonRate)]
 
 	// Part II
 	// Make duplicates of the binaryLines array that can be reduced
@@ -132,7 +132,7 @@ binaryReader[binaryLines,sampleSolution1 = 0,sampleSolution2 = 0] :=
 	oxygenRate = lifeSupportReader["Oxygen",oxygenLines,binaryLineLength]
 	CO2Rate = lifeSupportReader["CO2",CO2Lines,binaryLineLength]
 	lifeSupportRate = oxygenRate * CO2Rate
-	
+
 	if sampleSolution2 != 0
 	{
 		if sampleSolution2 == lifeSupportRate
@@ -146,7 +146,7 @@ binaryReader[binaryLines,sampleSolution1 = 0,sampleSolution2 = 0] :=
 	println["The life support rating is: " + (oxygenRate * CO2Rate)]
 }
 
-// Test sample solution
+// Test sample input
 // binaryReader[sampleInput,sampleSolution1,sampleSolution2]
 
 // Read the input file
