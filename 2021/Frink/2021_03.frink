@@ -1,0 +1,157 @@
+// Solution for 2021 Day 3: Binary Diagnostic
+// https://adventofcode.com/2021/day/3
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = ["00100",
+"11110",
+"10110",
+"10111",
+"10101",
+"01111",
+"00111",
+"11100",
+"10000",
+"11001",
+"00010",
+"01010"]
+sampleSolution1 = 198
+sampleSolution2 = 230
+
+// Create a function to solve Part II for Oxygen and CO2
+lifeSupportReader[lifeSupportType,lifeSupportLines,lifeSupportLineLength] :=
+{
+	lifeSupportDigitCount = makeArray[[lifeSupportLineLength],0]
+	for i = 0 to (lifeSupportLineLength - 1)
+	{
+		lifeSupportLength = (length[lifeSupportLines]) - 1
+		for lifeSupportLine = lifeSupportLines
+		{
+			lifeSupportDigitCount@i = lifeSupportDigitCount@i + parseInt[substr[lifeSupportLine,i,i+1]]
+		}
+		// Determine the most common bit
+		//commonBit = ((lifeSupportDigitCount@i) * 2) > lifeSupportLength ? "1" : "0"
+		if lifeSupportType == "Oxygen"
+		{
+			commonBit = ((lifeSupportDigitCount@i) * 2) > lifeSupportLength ? "1" : "0"
+		} else
+		{
+			commonBit = ((lifeSupportDigitCount@i) * 2) > lifeSupportLength ? "0" : "1"
+		}
+		// Loop through and remove elements from the array that don't meet the common bit in that position.
+		if length[lifeSupportLines] > 1
+		{
+			lifeSupportRemoveArray = new array
+			for n = 0 to lifeSupportLength
+			{
+				if substr[lifeSupportLines@n,i,i+1] != commonBit
+				{
+					lifeSupportRemoveArray.pushFirst[n]
+				}
+			}
+			for lifeSupportRemoveItem = lifeSupportRemoveArray
+			{
+				lifeSupportLines.remove[lifeSupportRemoveItem]
+			}
+		}
+	}
+	// Convert the remaining binary string to a number
+	return parseInt[(lifeSupportLines@0),2]
+}
+
+// Create function for solving Part I and Part II of the puzzle. With optional sample solution
+binaryReader[binaryLines,sampleSolution1 = 0,sampleSolution2 = 0] :=
+{
+	// Part I
+	// Detemine length of the binaryLines input
+	binaryLinesGammaLengh = (length[binaryLines]) / 2
+
+	// Get the length of the first input value and then set an array to count the digits
+	binaryLineLength = length[binaryLines@0]
+	binaryDigitCount = makeArray[[binaryLineLength],0]
+
+	// Loop through each line and count the digits
+	for binaryLine = binaryLines
+	{
+		binaryChars = charList[binaryLine]
+		// Create a pointer to track position through the chars and assign values to the binaryDigitCount array
+		pointer = 0
+		for binaryChar = binaryChars
+		{
+			binaryDigitCount@pointer = binaryDigitCount@pointer + parseInt[binaryChar]
+			pointer = pointer + 1
+		}
+	}
+
+	// Create an array of binary values for the gamma rate and the epsilon rate
+	gammaRateConstructor = makeArray[[binaryLineLength],0]
+	epsilonRateConstructor = makeArray[[binaryLineLength],0]
+
+	// Count the values and if they are more than half, the are for the gamma rate. Otherwise they are epsilon
+	pointer = 0
+	for binaryDigitValue = binaryDigitCount
+	{
+		if binaryDigitValue > binaryLinesGammaLengh
+		{
+			gammaRateConstructor@pointer = 1
+		} else
+		{
+			epsilonRateConstructor@pointer = 1
+		}
+		pointer = pointer + 1
+	}
+	// Convert the RateConstructors to string and convert them to a binary number
+	gammaRate = parseInt[join["",gammaRateConstructor],2]
+	epsilonRate = parseInt[join["",epsilonRateConstructor],2]
+	powerConsumptionRate = gammaRate * epsilonRate
+	// Testing sample solution
+	if sampleSolution1 != 0
+	{
+		if sampleSolution1 == powerConsumptionRate
+		{
+			println["The First Sample Solution is correct!"]
+		} else
+		{
+			println["The First Sample Solution is incorrect."]
+		}
+	}
+	println["The power consumption of the submarine is: " + (gammaRate * epsilonRate)]
+
+	// Part II
+	// Make duplicates of the binaryLines array that can be reduced
+	oxygenLines = deepCopy[binaryLines]
+	CO2Lines = deepCopy[binaryLines]
+
+	// Use the lifeSupportReader function for both Oxygen and CO2 rates.
+	oxygenRate = lifeSupportReader["Oxygen",oxygenLines,binaryLineLength]
+	CO2Rate = lifeSupportReader["CO2",CO2Lines,binaryLineLength]
+	lifeSupportRate = oxygenRate * CO2Rate
+	
+	if sampleSolution2 != 0
+	{
+		if sampleSolution2 == lifeSupportRate
+		{
+			println["The Second Sample Solution is correct!"]
+		} else
+		{
+			println["The Second Sample Solution is incorrect."]
+		}
+	}
+	println["The life support rating is: " + (oxygenRate * CO2Rate)]
+}
+
+// Test sample solution
+// binaryReader[sampleInput,sampleSolution1,sampleSolution2]
+
+// Read the input file
+binaryInput = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_03_input.txt"]
+binaryReader[binaryInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
