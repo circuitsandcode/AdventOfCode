@@ -1,0 +1,140 @@
+// Solution for 2021 Day 5: Hydrothermal Venture
+// https://adventofcode.com/2021/day/5
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = ["0,9 -> 5,9",
+"8,0 -> 0,8",
+"9,4 -> 3,4",
+"2,2 -> 2,1",
+"7,0 -> 7,4",
+"6,4 -> 2,0",
+"0,9 -> 2,9",
+"3,4 -> 1,4",
+"0,0 -> 8,8",
+"5,5 -> 8,2"]
+
+sampleSolution1 = 5
+sampleSolution2 = 12
+
+// Make a function to parse the list
+ventParser[ventInput] :=
+{
+	ventArr = new array
+	for ventItem = ventInput
+	{
+		ventArrItemStr = ventItem =~ %r/^(\d+),(\d+)\D+(\d+),(\d+)$/
+		ventArrItem = map["parseInt",ventArrItemStr]
+		ventArr.push[[[ventArrItem@0,ventArrItem@1],[ventArrItem@2,ventArrItem@3]]]
+	}
+	return ventArr
+}
+
+ventLineParse[partNum,ventInputArr,sampleSolution = 0] :=
+{
+	// Make 100 by 100 array populated with 0s
+	ventMap = makeArray[[1000,1000], 0]
+	ventLinesCalced = new array
+	for ventLine = ventInputArr
+	{
+		ventLineCalc = new array
+		if ventLine@0@0 == ventLine@1@0 || ventLine@0@1 == ventLine@1@1
+		{
+			if ventLine@0@0 > ventLine@1@0 || ventLine@0@1 > ventLine@1@1
+				stepVal = -1
+			else
+				stepVal = 1
+			if ventLine@0@0 == ventLine@1@0
+			{
+				x = ventLine@0@0
+				yRange = new range[ventLine@0@1 ,ventLine@1@1 ,stepVal]
+				for y = yRange
+				{
+					ventLineCalc.push[[x,y]]
+				}
+			} else
+			{
+				xRange = new range[ventLine@0@0,ventLine@1@0,stepVal]
+				y = ventLine@0@1
+				for x = xRange
+				{
+					ventLineCalc.push[[x,y]]
+				}
+			}
+			ventLinesCalced.push[ventLineCalc]
+		}
+		if partNum == 2 && ventLine@0@0 != ventLine@1@0 && ventLine@0@1 != ventLine@1@1
+		{
+			if ventLine@0@0 > ventLine@1@0
+				xStepVal = -1
+			else
+				xStepVal = 1
+			if ventLine@0@1 > ventLine@1@1
+				yStepVal = -1
+			else
+				yStepVal = 1
+			// Set starting x and y values with the range between them
+			rangeVal = abs[ventLine@0@0 - ventLine@1@0] - 1
+			x = ventLine@0@0
+			y = ventLine@0@1
+			// Insert starting value
+			ventLineCalc.push[[x,y]]
+			for i = 0 to rangeVal
+			{
+				x = x + xStepVal
+				y = y + yStepVal
+				ventLineCalc.push[[x,y]]
+			}
+			ventLinesCalced.push[ventLineCalc]
+		}
+	}
+	for ventLineCalced = ventLinesCalced
+	{
+		for ventLineItem = ventLineCalced
+		{
+			ventMap@(ventLineItem@0)@(ventLineItem@1) = ventMap@(ventLineItem@0)@(ventLineItem@1) + 1
+		}
+	}
+	ventCrossings = 0
+	multifor [x,y] = [0 to 999, 0 to 999]
+	{
+		if ventMap@x@y > 1
+			ventCrossings = ventCrossings + 1
+	}
+	println["Part: " + partNum + " There are " + ventCrossings + " vent crossings."]
+	if sampleSolution != 0
+	{
+		if sampleSolution == ventCrossings
+		{
+			println["The Sample Solution for part " + partNum + " is correct!"]
+		} else
+		{
+			println["The Sample Solution for part " + partNum + " is incorrect!"]
+		}
+	}
+	println[]
+}
+
+// Read the sample input
+ventLines = ventParser[sampleInput]
+// Test the sample solution
+ventLineParse[1,ventLines,sampleSolution1]
+ventLineParse[2,ventLines,sampleSolution2]
+
+
+// Read the input file and process it through all functions
+ventInputArr = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_05_input.txt"]
+// Parse the vent input file
+ventLines = ventParser[ventInputArr]
+// Map the vent lines from the input file
+ventLineParse[1,ventLines]
+ventLineParse[2,ventLines]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
