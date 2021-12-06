@@ -36,9 +36,10 @@ ventParser[ventInput] :=
 	return ventArr
 }
 
+// Make a function to map the vents
 ventLineParse[partNum,ventInputArr,sampleSolution = 0] :=
 {
-	// Make 100 by 100 array populated with 0s
+	// Make 1000 by 1000 array populated with 0s
 	ventMap = makeArray[[1000,1000], 0]
 	ventLinesCalced = new array
 	for ventLine = ventInputArr
@@ -123,6 +124,7 @@ ventLineParse[partNum,ventInputArr,sampleSolution = 0] :=
 
 // Read the sample input
 ventLines = ventParser[sampleInput]
+
 // Test the sample solution
 ventLineParse[1,ventLines,sampleSolution1]
 ventLineParse[2,ventLines,sampleSolution2]
@@ -135,6 +137,46 @@ ventLines = ventParser[ventInputArr]
 // Map the vent lines from the input file
 ventLineParse[1,ventLines]
 ventLineParse[2,ventLines]
+
+/*
+// Bonus - Animate the vent map  - Optional - just for fun
+// Uncomment to run the animate functions and create a gif of the vent lines
+// Make a function to parse the list for Animation
+ventParserAnimation[ventInput] :=
+{
+	ventArr = new array
+	for ventItem = ventInput
+	{
+		ventArrItemStr = ventItem =~ %r/^(\d+),(\d+)\D+(\d+),(\d+)$/
+		ventArrItem = map["parseInt",ventArrItemStr]
+		ventArr.push[[ventArrItem@0,ventArrItem@1,ventArrItem@2,ventArrItem@3]]
+	}
+	return ventArr
+}
+
+// Animate the vent lines
+//ventAnimationSteps = ventParserAnimation[sampleInput] // Sample Input
+ventAnimationSteps = ventParserAnimation[ventInputArr]
+
+a = new Animation[10/s]
+animationSteps = new array
+for ventAnimationStep = ventAnimationSteps
+{
+	animationSteps.push[ventAnimationStep]
+	g = new graphics
+	g.drawRectSides[-1, -1, 1001, 1001]
+	for animationStep = animationSteps
+	{
+		x1 = animationStep@0
+		y1 = animationStep@1
+		x2 = animationStep@2
+		y2 = animationStep@3
+		g.line[x1,y1,x2,y2]
+	}
+	a.add[g]
+}
+a.write["ventAnimation.gif", 1000, 1000]
+*/
 
 end = now[]
 println["Program run time: " + ((end - start)*1.0 -> "seconds")]
