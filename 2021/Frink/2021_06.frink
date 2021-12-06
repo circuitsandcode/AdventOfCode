@@ -1,0 +1,90 @@
+// Solution for 2021 Day 6: Lanternfish
+// https://adventofcode.com/2021/day/5
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = "3,4,3,1,2"
+
+sampleSolution1 = 5934
+sampleSolution2 = 26984457539
+
+// Create function to parse input and populate dictionary
+fishCounter[partNum,fishInput,days,sampleSolution = 0] :=
+{
+	fishArrayStr = split[ %r/\,/, fishInput]
+	fishArray = map["parseInt",fishArrayStr]
+	// Create dictionary to track the days in the fish cycle
+	fishDays = new dict
+	for i = 0 to 8
+	{
+		fishDays@i = 0
+	}
+	// Create a dictionary for calculating each day's changes
+	fishDaysCalc = deepCopy[fishDays]
+	// Load the initial input into a the fishDays dictionary with each value representing the number of fish with that many days left until reproducing
+	for fishItem = fishArray
+	{
+		fishDays.increment[fishItem, 1]
+	}
+	// Function to parse calculate the fish changes each day
+	for days = 1 to days
+	{
+		// Work through the loop backwards since 0 affects 8 and 6
+		for fishChange = 8 to 0 step -1
+		{
+			// If anything other than 0, just move the values down 1 into the fishCalc dictionary
+			if fishChange > 0
+			{
+				fishDaysCalc@(fishChange - 1) = fishDays@fishChange
+			} else
+			{
+				// If 0, create new fish in day 8 and increment the previous 0 fish back up to 6
+				fishDaysCalc@8 = fishDays@fishChange
+				fishDaysCalc@6 = fishDaysCalc@6 + fishDays@fishChange
+			}
+		}
+		// Move the calculated values back into the fish dict
+		fishDays = deepCopy[fishDaysCalc]
+	}
+	// After calculating the growth for the number of days, add up each of the 8 days fish totals
+	fishSum = 0
+	for [fiShDaysKey, fiShDaysValue] = fishDays
+	{
+		fishSum = fishSum + fiShDaysValue
+	}
+	println["Part " + partNum + ": After $days days there are $fishSum fish"]
+	if sampleSolution != 0
+	{
+		if sampleSolution == fishSum
+		{
+			println["The Sample Solution for part " + partNum + " is correct!"]
+		} else
+		{
+			println["The Sample Solution for part " + partNum + " is incorrect!"]
+		}
+	}
+	println[]
+}
+
+// Test run on 18 days (This was an example on the problem
+fishCounter[0,sampleInput,18,26]
+// Part I - 80 Days
+fishCounter[1,sampleInput,80,sampleSolution1]
+// Part II - 256 Days
+fishCounter[2,sampleInput,256,sampleSolution2]
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+fishInput = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_06_input.txt"]]
+// Part I - 80 Days
+fishCounter[1,fishInput,80]
+// Part I - 80 Days
+fishCounter[2,fishInput,256]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
