@@ -1,0 +1,78 @@
+// Solution for 2021 Day 7: The Treachery of Whales
+// https://adventofcode.com/2021/day/7
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = "16,1,2,0,4,2,7,1,2,14"
+
+sampleSolution1 = 37
+sampleSolution2 = 168
+
+// Create function to parse input and populate dictionary
+crabHorizontalMoveParse[partNum,crabInput,sampleSolution = 0] :=
+{
+	crabPositionArrayStr = split[ %r/\,/, crabInput]
+	crabPositionArray = map["parseInt",crabPositionArrayStr]
+	// Capture the minimum and maximum values from the import
+	crabMin = min[crabPositionArray]
+	crabMax = max[crabPositionArray]
+	// Create dictionary to track the days in the fish cycle
+	crabPosition = new dict
+	for crabPositionItem = crabPositionArray
+	{
+		crabPosition.increment[crabPositionItem, 1]
+	}
+	// Set a number high number to set a future minimum
+	totalFuelUsed = 1000000000
+	// Loop through all possible positions
+	// There's probably a more clever way to do this, but it runs in 3 seconds so I'm calling it good.
+	for position = crabMin to crabMax
+	{
+		fuelUsed = 0
+		// Loop through the dictionary
+		for [crabKey, crabValue] = crabPosition
+		{
+			// The fuel used is the difference between the current crab key and the current position value.
+			fuel = abs[position - crabKey]
+			// Determine the fuelMod - for part I, this is just the fuel used multiplied by the number of crabs.
+			// For part II, it is the sum of all prior numbers in the difference. (i.e. diff of 5 = 5+4+3+2+1).
+			// This is done with the Triangular number calculation x*(x+1)/2 -- that value is then multiplied by the number of crabs.
+			fuelMod = partNum == 1 ? fuel * crabValue : ((fuel*(fuel + 1))/2) * crabValue
+			fuelUsed = fuelUsed + fuelMod
+		}
+		if fuelUsed < totalFuelUsed
+		{
+			totalFuelUsed = fuelUsed
+		}
+	}
+	println["Part " + partNum + ": Total fuel is $totalFuelUsed"]
+	if sampleSolution != 0
+	{
+		if sampleSolution == totalFuelUsed
+		{
+			println["The Sample Solution for part " + partNum + " is correct!"]
+		} else
+		{
+			println["The Sample Solution for part " + partNum + " is incorrect!"]
+		}
+	}
+	println[]
+}
+
+// Test the sampleInput
+crabHorizontalMoveParse[1,sampleInput,sampleSolution1]
+crabHorizontalMoveParse[2,sampleInput,sampleSolution2]
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+crabInput = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_07_input.txt"]]
+crabHorizontalMoveParse[1,crabInput]
+crabHorizontalMoveParse[2,crabInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
