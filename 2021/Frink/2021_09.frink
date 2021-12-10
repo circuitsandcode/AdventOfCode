@@ -1,0 +1,142 @@
+// Solution for 2021 9: Smoke Basin
+// https://adventofcode.com/2021/day/9
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = """2199943210
+3987894921
+9856789892
+8767896789
+9899965678"""
+
+sampleSolution1 = 15
+sampleSolution2 = 1134
+
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+basinInputData = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_09_input.txt"]]
+
+basinParser[basinInput,sampleSolution1=0,sampleSolution2=0] :=
+{
+	// Split the array into lines
+	sampleInputArr = splitLines[basinInput]
+
+	// Length of first line to determine length
+	mapLineLength = length[sampleInputArr@0]
+	mapLineDepth = length[sampleInputArr]
+
+	// I made a border of 9s so that I can scan without accounting for the edge.
+	mapBorder = makeArray[[mapLineLength+2], 9]
+
+	mapArray = new array
+	mapArray.push[mapBorder]
+	for mapLine = sampleInputArr
+	{
+		mapLineChar = map["parseInt",charList[mapLine]]
+		mapLineChar.push[9]
+		mapLineChar.pushFirst[9]
+		mapArray.push[mapLineChar]
+	}
+	mapArray.push[mapBorder]
+
+	// Set variables to solve the problems
+	basinsArr = new array
+	basinsDictKey = 0
+	lowPoints = 0
+	basinLowPoints = new dict
+	bounds = [new range[1,mapLineLength],new range[1,mapLineDepth]]
+	//innerBounds = [new range[-1,1],new range[-1,1]]
+	multifor[y,x] = bounds
+	{
+		lowPointCheck = false
+		neighbors = [mapArray@(x+1)@y,mapArray@x@(y+1),mapArray@(x-1)@y,mapArray@x@(y-1)]
+		if mapArray@x@y < min[neighbors]
+		{
+			lowPoints = lowPoints + mapArray@x@y + 1
+			basinLowPoints@basinsDictKey = new set[[x,y]]
+			basinsDictKey = basinsDictKey + 1
+			lowPointCheck = true
+		}
+		// Build an array of all non 9 values to build the basins for part II
+		// We can exclude any point that was identified as a lowPoint since it went into the basin dictionary in the if statement above
+		if mapArray@x@y != 9 && lowPointCheck == false
+		{
+			basinsArr.push[[x,y]]
+		}
+	}
+	println["Part I: Low Points Sum is: $lowPoints"]
+	if sampleSolution1 != 0
+	{
+		if sampleSolution1 == lowPoints
+		{
+			println["The Sample Solution for part 1 is correct!"]
+		} else
+		{
+			println["The Sample Solution for part 1 is incorrect!"]
+		}
+	}
+	// Loop through the lowpoints and compare with all other values in the basins array
+	valChanged = true
+	while valChanged
+	{
+		for [outerKey,outerValue] = basinLowPoints
+		{
+			// Create an array to track deletes
+			basinRemoveArray = new array
+			for basinsIndex = 0 to length[basinsArr] - 1
+			{
+				if outerValue.contains[[basinsArr@basinsIndex@0,(basinsArr@basinsIndex@1)+1]] || outerValue.contains[[(basinsArr@basinsIndex@0)+1,basinsArr@basinsIndex@1]] || outerValue.contains[[basinsArr@basinsIndex@0,(basinsArr@basinsIndex@1)-1]] || outerValue.contains[[(basinsArr@basinsIndex@0)-1,basinsArr@basinsIndex@1]]
+				{
+					// Add anything that matches on an adjascent edge to the basinLowPoints set and add the index to the removal list 
+					(basinLowPoints@outerKey).put[basinsArr@basinsIndex]
+					basinRemoveArray.push[basinsIndex]
+				}
+			}
+			while length[basinRemoveArray] > 0
+			{
+				removeIndex = basinRemoveArray.pop[]
+				basinsArr.remove[removeIndex]
+			}
+		}
+		// Run until the basinsArr is empty and all points identified as belinging to a basin
+		if length[basinsArr] == 0
+		{
+			valChanged = false
+		}
+	}
+
+	// Determine the length of all basins so they can be sorted and the last three multiplied
+	lengthArray = new array
+	for [key, value] = basinLowPoints
+	{
+		lengthArray.push[length[value]]
+	}
+	lengthArraySorted = sort[lengthArray]
+	largestBasins = product[last[lengthArraySorted,3]]
+	println["Part II: The product of the three largest basins is " + largestBasins]
+	if sampleSolution2 != 0
+	{
+		if sampleSolution2 == largestBasins
+		{
+			println["The Sample Solution for part 2 is correct!"]
+		} else
+		{
+			println["The Sample Solution for part 2 is incorrect!"]
+		}
+	}
+}
+
+// Run the sample input
+basinParser[sampleInput,sampleSolution1,sampleSolution2]
+// Run the import
+basinParser[basinInputData]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
