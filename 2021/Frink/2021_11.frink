@@ -1,0 +1,239 @@
+// Solution for 2021 Day 11: Dumbo Octopus
+// https://adventofcode.com/2021/day/11
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = """5483143223
+2745854711
+5264556173
+6141336146
+6357385478
+4167524645
+2176841721
+6882881134
+4846848554
+5283751526"""
+
+octopiInput = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_11_input.txt"]]
+
+sampleSolution1 = 1656
+sampleSolution2 = 195
+
+octopiFlasher[octopiGrid,sampleSolution1=0,sampleSolution2=0] :=
+{
+	// Translate the input into a 10x10 array
+	dumboGrid = new array
+	// Add border of -1 digits that the program will ignore. This saves the trouble of writing edge detecting logic.
+	gridBorder = makeArray[[12], -1]
+	dumboGrid.push[gridBorder]
+	dumboInputLineStr = splitLines[octopiGrid]
+	for dumboLine = dumboInputLineStr
+	{
+		dumboInputArr = map["parseInt",charList[dumboLine]]
+		dumboInputArr.push[-1]
+		dumboInputArr.pushFirst[-1]
+		dumboGrid.push[dumboInputArr]
+	}
+	dumboGrid.push[gridBorder]
+
+	// Variable to count the flashes
+	flashCounter = 0
+
+	// Create a set to track all dumbo octopus that flashed this cycle
+	flashedSet = new set
+
+	// Create a set to track level 10 Octopi
+	OctopiEnergy10 = new set
+
+	// Function to increase adjascent octopuses
+	adjascentIncrease[centerDumboOctopus,centerDumboOctopusGrid] :=
+	{
+		// Create a set to track any new 10 energy octopi
+		centerOctopiEnergy10 = new set
+		dumboOctopusX = centerDumboOctopus@1
+		dumboOctopusY = centerDumboOctopus@0
+		// Set energyBounds for all octopus
+		energyBounds = [new range[-1,1], new range[-1,1]]
+		INCREASELOOP:
+		multifor [xMod,yMod] = energyBounds
+		{
+			adjacentX = dumboOctopusX + xMod
+			adjacentY = dumboOctopusY + yMod
+			adjacentValue = centerDumboOctopusGrid@adjacentY@adjacentX
+			if (xMod == 0 && yMod == 0) || adjacentValue == -1 || adjacentValue == 0 || adjacentValue == 10
+			{
+				next INCREASELOOP
+			}
+			// Increment the adjacent grid values by 1
+			centerDumboOctopusGrid@adjacentY@adjacentX = adjacentValue + 1
+			// If the octopus got raised to 10, add it to the set so it can be reset to 0 later.
+			if centerDumboOctopusGrid@adjacentY@adjacentX == 10
+			{
+				centerOctopiEnergy10.put[[adjacentY,adjacentX]]
+			}
+		}
+		// Return the updated grid and the set - it will be unioned with the overall set.
+		return [centerDumboOctopusGrid,centerOctopiEnergy10]
+	}
+
+	// Optional Code for Animation. Uncomment to make a gif showing the bioluminescence changes
+	// More code to uncomment below
+	/*
+	colorDict = new dict
+	colorDict@0 = [225,245,254]
+	colorDict@1 = [1,87,155]
+	colorDict@2 = [2,119,189]
+	colorDict@3 = [2,136,209]
+	colorDict@4 = [3,155,229]
+	colorDict@5 = [3,169,244]
+	colorDict@6 = [41,182,246]
+	colorDict@7 = [79,195,247]
+	colorDict@8 = [129,212,250]
+	colorDict@9 = [179,229,252]
+
+	colorConvertRGB[colorArr] :=
+	{
+		colorCovert = { |x| round[x/255,.001] }
+		return map[colorCovert,colorArr]
+	}
+
+	for i = 0 to 9
+	{
+		colorDict@i = colorConvertRGB[colorDict@i]
+	}
+	a = new Animation[5/s]
+	*/
+
+	// Set variables to track octopus flashes
+	cycles = 0
+	// These variables control the until loop. They will be set to true when their conditions are met.
+	cycle100 = false
+	allFlash = false
+	bounds = [new range[1,10],new range[1,10]]
+	// Calculate dumbo octopus changes for each round until Parts I and II are complete
+	until allFlash == true && cycle100 == true
+	{
+		// count the cycles
+		cycles = cycles + 1
+		// Clear the flashed set each cycle
+		flashedSet.clear
+		OctopiEnergy10.clear
+		// Count the flahses per round so we will know when all 100 flash.
+		flashRound = 0
+		// Increase all octopus by 1 energy
+		multifor[dumboY,dumboX] = bounds
+		{
+			dumbo = [dumboY,dumboX]
+			dumboGrid@dumboY@dumboX = (dumboGrid@dumboY@dumboX) + 1
+			if dumboGrid@dumboY@dumboX == 10
+			{
+				dumbo = [dumboY,dumboX]
+				OctopiEnergy10.put[dumbo]
+			}
+		}
+		// Loop until the OctopiEnergy10 set is empty
+		while length[OctopiEnergy10] > 0
+		{
+			// Loop through the OctopiEnergy10 set
+			for dumbo10 = OctopiEnergy10
+			{
+				dumbo10X = dumbo10@1
+				dumbo10Y = dumbo10@0
+				// Reset the 10 energy octopi to 0
+				dumboGrid@dumbo10Y@dumbo10X = 0
+				// Use the adjascentIncrease function to increase all adjascent octopi
+				adjascentIncreased = adjascentIncrease[dumbo10,dumboGrid]
+				// Reset the grid with the changes from the function.
+				dumboGrid = adjascentIncreased@0
+				// Add any newly created 10 energy octopi to the set
+				OctopiEnergy10 = union[OctopiEnergy10,adjascentIncreased@1]
+				flashCounter = flashCounter + 1
+				flashRound = flashRound + 1
+				// Remove the reset octopi from the set
+				OctopiEnergy10.remove[dumbo10]
+			}
+			// Part II: Identify the round that all octopi flash
+			if allFlash == false && flashRound == 100
+			{
+				firstRoundAllFlash = cycles
+				// Set the until condition to true so the loop can exit
+				allFlash = true
+			}
+		}
+		// Optional Code for Animation. Uncomment to make a gif showing the bioluminescence changes
+		// More code to uncomment above
+		/*
+		g = new graphics
+		g.backgroundColor[0,0,0]
+		multifor[ycor,xcor] = bounds
+		{
+			xplot = xcor * 10
+			yplot = ycor * 10
+			plotval = dumboGrid@ycor@xcor
+			rgb = colorDict@plotval
+			red = rgb@0
+			green = rgb@1
+			blue = rgb@2
+			if plotval == 0
+				bgColorVal = 1
+			else
+				bgColorVal = (plotval/10)-.1
+			g.color[bgColorVal,bgColorVal,bgColorVal]
+			g.fillEllipseCenter[xplot,yplot,10,10]
+			g.color[red,green,blue]
+			g.fillEllipseCenter[xplot,yplot,9,9]
+		}
+		a.add[g]
+		*/
+		// Part I: Number of flashes after 100 rounds
+		if cycles == 100
+		{
+			// Set the until condition to true so the loop can exit
+			cycle100 = true
+			println["flashCounter at 100 rounds is: $flashCounter"]
+			if sampleSolution1 != 0
+			{
+				if sampleSolution1 == flashCounter
+				{
+					println["The Sample Solution for part I is correct!"]
+				} else
+				{
+					println["The Sample Solution for part I is incorrect!"]
+				}
+				println[""]
+			}
+		}
+	}
+	println["First round all flashed: $firstRoundAllFlash"]
+	if sampleSolution2 != 0
+	{
+		if sampleSolution2 == firstRoundAllFlash
+		{
+			println["The Sample Solution for part II is correct!"]
+		} else
+		{
+			println["The Sample Solution for part II is incorrect!"]
+		}
+		println[""]
+	}
+	// Uncomment the code below to write the optional Animation
+	/*
+	println["Writing animation"]
+	a.write["OctopiAnimation1.gif", 500, 500]
+	println["Done writing animation"]
+	*/
+}
+
+// Run the sample input
+octopiFlasher[sampleInput,sampleSolution1,sampleSolution2]
+// Run the import
+octopiFlasher[octopiInput]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
