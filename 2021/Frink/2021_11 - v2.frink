@@ -52,12 +52,10 @@ energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 		return false
 	} else
 	{
-		/*
-		if dumboOctopusGrid@dumboOctopusY@dumboOctopusX < 10
+		if dumboVal < 10
 		{
 			dumboOctopusGrid@dumboOctopusY@dumboOctopusX = dumboVal + 1
 		}
-		*/
 		if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
 		{
 			println["We have a flash on $dumboOctopus!"]
@@ -66,23 +64,6 @@ energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 			flashCount = flashCount + 1
 			// Set energyBounds for all octopus
 			energyBounds = [new range[-1,1], new range[-1,1]]
-			INCREASELOOP:
-			multifor [xMod,yMod] = energyBounds
-			{
-				if xMod == 0 && yMod == 0
-				{
-					next INCREASELOOP
-				}
-				adjascentX = dumboOctopusX + xMod
-				adjascentY = dumboOctopusY + yMod
-				if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
-				{
-					next INCREASELOOP
-				} else
-				{
-					dumboOctopusGrid@dumboOctopusY@dumboOctopusX = dumboOctopusGrid@dumboOctopusY@dumboOctopusX + 1
-				}
-			}
 			FLASHLOOP:
 			multifor [xMod,yMod] = energyBounds
 			{
@@ -90,25 +71,24 @@ energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 				{
 					next FLASHLOOP
 				}
-				if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
+				adjascentX = dumboOctopusX + xMod
+				adjascentY = dumboOctopusY + yMod
+				adjascentOctopus = [adjascentY,adjascentX]
+				dumboResult = energyFlash[adjascentOctopus,dumboOctopusGrid,dumboFlashedSet,0]
+				if dumboResult != false
 				{
-					adjascentX = dumboOctopusX + xMod
-					adjascentY = dumboOctopusY + yMod
-					adjascentOctopus = [adjascentY,adjascentX]
-					dumboResult = energyFlash[adjascentOctopus,dumboOctopusGrid,dumboFlashedSet,0]
-					if dumboResult != false
-					{
-						dumboOctopusGrid = dumboResult@0
-						dumboFlashedSet = union[dumboFlashedSet,dumboResult@1]
-						flashCount = flashCount + dumboResult@2
-					}
+					dumboOctopusGrid = dumboResult@0
+					dumboFlashedSet = union[dumboFlashedSet,dumboResult@1]
+					flashCount = flashCount + dumboResult@2
 				}
 			}
+			/*
 			println["Grid after $dumboOctopus flash:"]
 			for gridLine = dumboOctopusGrid
 			{
 				println[gridLine]
 			}
+			*/
 		}
 			return [dumboOctopusGrid,dumboFlashedSet,flashCount]
 	}

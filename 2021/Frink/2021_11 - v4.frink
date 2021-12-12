@@ -29,6 +29,31 @@ flashCounter = 0
 // Create a set to track all dumbo octopus that flashed this cycle
 flashedSet = new set
 
+// Create a set to track level 10 Octopi
+OctopiEnergy10 = new set
+
+// Function to increase adjascent octopuses
+adjascentIncrease[centerDumboOctopus,centerDumboOctopusGrid] :=
+{
+	dumboOctopusX = centerDumboOctopus@1
+	dumboOctopusY = centerDumboOctopus@0
+	// Set energyBounds for all octopus
+	energyBounds = [new range[-1,1], new range[-1,1]]
+	INCREASELOOP:
+	multifor [xMod,yMod] = energyBounds
+	{
+		adjacentX = dumboOctopusX + xMod
+		adjacentY = dumboOctopusY + yMod
+		adjacentValue = centerDumboOctopusGrid@adjacentY@adjacentX
+		if (xMod == 0 && yMod == 0) || adjacentValue == 10 || adjacentValue == -1 || adjacentValue == 0
+		{
+			next INCREASELOOP
+		}
+		centerDumboOctopusGrid@adjacentY@adjacentX = adjacentValue + 1
+	}
+	return centerDumboOctopusGrid
+}
+
 //function defintion
 energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 {
@@ -38,26 +63,9 @@ energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 	dumboVal = dumboOctopusGrid@dumboOctopusY@dumboOctopusX
 	if dumboFlashedSet.contains[dumboOctopus] || dumboVal == -1
 	{
-		//println["dumboOctopus not valid"]
-		/*
-		if dumboFlashedSet.contains[dumboOctopus]
-		{
-			println["$dumboOctopus Already flashed"]
-		}
-		if dumboVal == -1
-		{
-			println["$dumboOctopus is $dumboVal"]
-		}
-		*/
 		return false
 	} else
 	{
-		/*
-		if dumboOctopusGrid@dumboOctopusY@dumboOctopusX < 10
-		{
-			dumboOctopusGrid@dumboOctopusY@dumboOctopusX = dumboVal + 1
-		}
-		*/
 		if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
 		{
 			println["We have a flash on $dumboOctopus!"]
@@ -65,24 +73,10 @@ energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 			dumboFlashedSet.put[dumboOctopus]
 			flashCount = flashCount + 1
 			// Set energyBounds for all octopus
+			// Call adjascentIncrease function and set the new grid
+			internalDumboOctopusGrid =  adjascentIncrease[dumboOctopus,dumboOctopusGrid]
+			// Loop through all adjascent based on new grid
 			energyBounds = [new range[-1,1], new range[-1,1]]
-			INCREASELOOP:
-			multifor [xMod,yMod] = energyBounds
-			{
-				if xMod == 0 && yMod == 0
-				{
-					next INCREASELOOP
-				}
-				adjascentX = dumboOctopusX + xMod
-				adjascentY = dumboOctopusY + yMod
-				if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
-				{
-					next INCREASELOOP
-				} else
-				{
-					dumboOctopusGrid@dumboOctopusY@dumboOctopusX = dumboOctopusGrid@dumboOctopusY@dumboOctopusX + 1
-				}
-			}
 			FLASHLOOP:
 			multifor [xMod,yMod] = energyBounds
 			{
@@ -90,18 +84,15 @@ energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
 				{
 					next FLASHLOOP
 				}
-				if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
+				adjacentX = dumboOctopusX + xMod
+				adjacentY = dumboOctopusY + yMod
+				adjacentOctopus = [adjacentY,adjacentX]
+				dumboResult = energyFlash[adjacentOctopus,internalDumboOctopusGrid,dumboFlashedSet,0]
+				if dumboResult != false
 				{
-					adjascentX = dumboOctopusX + xMod
-					adjascentY = dumboOctopusY + yMod
-					adjascentOctopus = [adjascentY,adjascentX]
-					dumboResult = energyFlash[adjascentOctopus,dumboOctopusGrid,dumboFlashedSet,0]
-					if dumboResult != false
-					{
-						dumboOctopusGrid = dumboResult@0
-						dumboFlashedSet = union[dumboFlashedSet,dumboResult@1]
-						flashCount = flashCount + dumboResult@2
-					}
+					dumboOctopusGrid = dumboResult@0
+					dumboFlashedSet = union[dumboFlashedSet,dumboResult@1]
+					flashCount = flashCount + dumboResult@2
 				}
 			}
 			println["Grid after $dumboOctopus flash:"]
@@ -130,12 +121,14 @@ dumboGrid.push[gridBorder]
 
 // Set bounds for the grid of dumbo octopus
 // This ignores the border of -1 fields
+
 bounds = [new range[1,10],new range[1,10]]
-for i = 1 to 3
+for i = 1 to 5
 {
 	println["Beginning step $i:"]
 	// Clear the flashed set each cycle
 	flashedSet.clear
+	OctopiEnergy10.clear
 	multifor[dumboY,dumboX] = bounds
 	{
 		dumboGrid@dumboY@dumboX = (dumboGrid@dumboY@dumboX) + 1

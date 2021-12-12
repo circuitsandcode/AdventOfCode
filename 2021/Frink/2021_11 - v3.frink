@@ -1,0 +1,231 @@
+// Solution for 2021 Day 11: Dumbo Octopus
+// https://adventofcode.com/2021/day/11
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = """5483143223
+2745854711
+5264556173
+6141336146
+6357385478
+4167524645
+2176841721
+6882881134
+4846848554
+5283751526"""
+
+//sampleInput = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_11_CTH_input.txt"]]
+
+sampleSolution1 = 1656
+sampleSolution2 = 1134
+
+// Variable to count the flashes
+flashCounter = 0
+
+// Create a set to track all dumbo octopus that flashed this cycle
+flashedSet = new set
+
+// Create a set to track level 10 Octopi
+OctopiEnergy10 = new set
+
+// Function to increase adjascent octopuses
+adjascentIncrease[centerDumboOctopus,centerDumboOctopusGrid] :=
+{
+	centerOctopiEnergy10 = new set
+	dumboOctopusX = centerDumboOctopus@1
+	dumboOctopusY = centerDumboOctopus@0
+	// Set energyBounds for all octopus
+	energyBounds = [new range[-1,1], new range[-1,1]]
+	INCREASELOOP:
+	multifor [xMod,yMod] = energyBounds
+	{
+		adjacentX = dumboOctopusX + xMod
+		adjacentY = dumboOctopusY + yMod
+		adjacentValue = centerDumboOctopusGrid@adjacentY@adjacentX
+		if (xMod == 0 && yMod == 0) || adjacentValue == -1 || adjacentValue == 0 || adjacentValue == 10
+		{
+			next INCREASELOOP
+		}
+		centerDumboOctopusGrid@adjacentY@adjacentX = adjacentValue + 1
+		if centerDumboOctopusGrid@adjacentY@adjacentX == 10
+		{
+			centerOctopiEnergy10.put[[adjacentY,adjacentX]]
+		}
+	}
+	return [centerDumboOctopusGrid,centerOctopiEnergy10]
+}
+
+//function defintion
+/*
+energyFlash[dumboOctopus,dumboOctopusGrid,dumboFlashedSet,flashCount] :=
+{
+	//println[dumboOctopus]
+	dumboOctopusX = dumboOctopus@1
+	dumboOctopusY = dumboOctopus@0
+	dumboVal = dumboOctopusGrid@dumboOctopusY@dumboOctopusX
+	if dumboFlashedSet.contains[dumboOctopus] || dumboVal == -1
+	{
+		return false
+	} else
+	{
+		if dumboOctopusGrid@dumboOctopusY@dumboOctopusX == 10
+		{
+			println["We have a flash on $dumboOctopus!"]
+			dumboOctopusGrid@dumboOctopusY@dumboOctopusX = 0
+			dumboFlashedSet.put[dumboOctopus]
+			flashCount = flashCount + 1
+			// Set energyBounds for all octopus
+			// Call adjascentIncrease function and set the new grid
+			internalDumboOctopusGrid =  adjascentIncrease[dumboOctopus,dumboOctopusGrid]
+			// Loop through all adjascent based on new grid
+			energyBounds = [new range[-1,1], new range[-1,1]]
+			FLASHLOOP:
+			multifor [xMod,yMod] = energyBounds
+			{
+				if xMod == 0 && yMod == 0
+				{
+					next FLASHLOOP
+				}
+				adjacentX = dumboOctopusX + xMod
+				adjacentY = dumboOctopusY + yMod
+				adjacentOctopus = [adjacentY,adjacentX]
+				dumboResult = energyFlash[adjacentOctopus,internalDumboOctopusGrid,dumboFlashedSet,0]
+				if dumboResult != false
+				{
+					dumboOctopusGrid = dumboResult@0
+					dumboFlashedSet = union[dumboFlashedSet,dumboResult@1]
+					flashCount = flashCount + dumboResult@2
+				}
+			}
+			println["Grid after $dumboOctopus flash:"]
+			for gridLine = dumboOctopusGrid
+			{
+				println[gridLine]
+			}
+		}
+			return [dumboOctopusGrid,dumboFlashedSet,flashCount]
+	}
+}
+*/
+
+dumboGrid = new array
+// Add border of -1 digits that the program will ignore. This saves the trouble of writing edge detecting logic.
+gridBorder = makeArray[[12], -1]
+dumboGrid.push[gridBorder]
+dumboInputLineStr = splitLines[sampleInput]
+for dumboLine = dumboInputLineStr
+{
+	dumboInputArr = map["parseInt",charList[dumboLine]]
+	dumboInputArr.push[-1]
+	dumboInputArr.pushFirst[-1]
+	dumboGrid.push[dumboInputArr]
+}
+dumboGrid.push[gridBorder]
+
+// Set bounds for the grid of dumbo octopus
+// This ignores the border of -1 fields
+
+//firstRoundAllFlash = 0
+i = 0
+cycle100 = false
+allFlash = false
+bounds = [new range[1,10],new range[1,10]]
+//for i = 1 to 100
+until allFlash == true && cycle100 == true
+{
+	i = i+1
+	//println["Beginning step $i:"]
+	// Clear the flashed set each cycle
+	flashedSet.clear
+	OctopiEnergy10.clear
+	flashRound = 0
+	multifor[dumboY,dumboX] = bounds
+	{
+		dumbo = [dumboY,dumboX]
+		dumboGrid@dumboY@dumboX = (dumboGrid@dumboY@dumboX) + 1
+		if dumboGrid@dumboY@dumboX == 10
+		{
+			dumbo = [dumboY,dumboX]
+			OctopiEnergy10.put[dumbo]
+		}
+	}
+	/*
+	println["After step $i natural increase:"]
+	for gridLine = dumboGrid
+	{
+		println[gridLine]
+	}
+	*/
+	//println["Step $i countOf10s is " + length[OctopiEnergy10]]
+	while length[OctopiEnergy10] > 0
+	{
+		for dumbo10 = OctopiEnergy10
+		{
+			dumbo10X = dumbo10@1
+			dumbo10Y = dumbo10@0
+			dumboGrid@dumbo10Y@dumbo10X = 0
+			adjascentIncreased = adjascentIncrease[dumbo10,dumboGrid]
+			dumboGrid = adjascentIncreased@0
+			OctopiEnergy10 = union[OctopiEnergy10,adjascentIncreased@1]
+			flashCounter = flashCounter + 1
+			flashRound = flashRound + 1
+			OctopiEnergy10.remove[dumbo10]
+		}
+		//println["Total Flashes round $i is $flashRound"]
+		if allFlash == false && flashRound == 100
+		{
+			firstRoundAllFlash = i
+			allFlash = true
+		}
+		/*
+		multifor[dumboY,dumboX] = bounds
+		{
+			dumboGrid@dumboY@dumboX = (dumboGrid@dumboY@dumboX) + 1
+		}
+		*/
+	
+		// Make an array of the coordinates
+		
+		//energyResult = energyFlash[dumbo,dumboGrid,flashedSet,0]
+		/*
+		if energyResult != false
+		{
+			// The grid will change every time
+			dumboGrid = energyResult@0
+			flashCounter = flashCounter + energyResult@2
+			flashedSet = union[flashedSet,energyResult@1]
+		}
+		*/
+	}
+	/*
+	println["flashCounter after step $i is: $flashCounter"]
+	println["Grid after step $i:"]
+	for gridLine = dumboGrid
+	{
+		println[gridLine]
+	}
+	*/
+	if i == 100
+	{
+		cycle100 = true
+		println["flashCounter at 100 rounds is: $flashCounter"]
+	}
+}
+
+
+//println["flashCounter is: $flashCounter"]
+println["First round all flashed: $firstRoundAllFlash"]
+
+// Run the sample input
+//basinParser[sampleInput,sampleSolution1,sampleSolution2]
+// Run the import
+//basinParser[basinInputData]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]

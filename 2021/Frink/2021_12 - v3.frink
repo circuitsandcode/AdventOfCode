@@ -1,0 +1,172 @@
+// Solution for 2021 Day 11: Dumbo Octopus
+// https://adventofcode.com/2021/day/11
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = """dc-end
+HN-start
+start-kj
+dc-start
+dc-HN
+LN-dc
+HN-end
+kj-sa
+kj-HN
+kj-dc"""
+
+sampleSolution1 = 1656
+sampleSolution2 = 1134
+
+sampleInputArr = splitLines[sampleInput]
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+caveInputFile = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_12_CTH_input.txt"]
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+//pathInput = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_12_input.txt"]
+//println[pathInput]
+
+pathMapper[caveInput,sampleSolution1=0,sampleSolution2=0] :=
+{
+	cavePaths = new array
+	for caveSegments = caveInput
+	{
+		segmentArr = caveSegments =~ %r/^(\w+)\-(\w+)$/
+		cavePaths.push[segmentArr]
+	}
+	//println[cavePaths]
+	cavePathDict = new dict
+	for cavePath = cavePaths
+	{
+		//println[cavePath]
+		caveSet0 = cavePath@0
+		caveSet1 = cavePath@1
+		caveKey0 = cavePath@0
+		caveKey1 = cavePath@1
+		//println["caveKey0 is $caveKey0"]
+		//println["caveSet0 is $caveSet0"]
+		if !cavePathDict.containsKey[caveKey0]
+			cavePathDict@caveKey0 = new array
+		if !cavePathDict.containsKey[caveKey1]
+			cavePathDict@caveKey1 = new array
+		//println["cavePathDict is $cavePathDict"]
+		(cavePathDict@caveKey0).push[caveSet1]
+		(cavePathDict@caveKey1).push[caveSet0]
+	}
+	println["cavePathDict is $cavePathDict"]
+	// Part I
+	pathsTraversed = [["start"]]
+	pathsFinished = 0
+	while length[pathsTraversed] != 0
+	{
+		path = pathsTraversed.popFirst[]
+		//println["path is $path"]
+		//pathLast = length[path] - 1
+		//pathVal = path@pathLast
+		// Get the last item on the current path array without removing it
+		pathVal = path.peek[]
+		//println["pathVal is $pathVal"]
+		possiblePaths = cavePathDict@pathVal
+		for possiblePath = possiblePaths
+		{
+			//println["possiblePath is $possiblePath"]
+			if possiblePath == "end"
+			{
+				pathsFinished = pathsFinished + 1
+				//println["pathsFinished is $pathsFinished"]
+			} else
+			{
+				possiblePath_lower = false
+				if possiblePath =~ %r/^[a-z]+$/
+				{
+					possiblePath_lower = true
+				}
+				//println["possiblePath_lower is $possiblePath_lower"]
+				if !possiblePath_lower || !path.contains[possiblePath]
+				{
+					val = new array
+					val = deepCopy[path]
+					val.push[possiblePath]
+					//println["val is $val"]
+					pathsTraversed.push[val]
+					//println["pathsTraversed is $pathsTraversed"]
+				}
+			}
+		}
+	}
+
+	println["Part I is $pathsFinished"]
+
+	// Part II
+	// Create a pathsTraversed array to track the paths we've taken so far
+	pathsTraversed = [["start"]]
+	pathsFinished = 0
+	while length[pathsTraversed] != 0
+	{
+		path = pathsTraversed.popFirst[]
+		//println["path is $path"]
+		//pathLast = length[path] - 1
+		//pathVal = path@pathLast
+		// Get the last item on the current path array without removing it
+		pathVal = path.peek[]
+		//println["pathVal is $pathVal"]
+		possiblePaths = cavePathDict@pathVal
+		for possiblePath = possiblePaths
+		{
+			// Check if we've already been in the current small cave
+			possiblePath_lower = false
+			repeatedSmallCave = false
+			if possiblePath =~ %r/^[a-z]+$/
+			{
+				possiblePath_lower = true
+			}
+			//println["possiblePath_lower is $possiblePath_lower"]
+			if possiblePath_lower == true && path.contains[possiblePath]
+			{
+				repeatedSmallCave = true
+			}
+			//println["possiblePath is $possiblePath"]
+			if possiblePath == "end"
+			{
+				pathsFinished = pathsFinished + 1
+				//println["pathsFinished is $pathsFinished"]
+			} else
+			{
+				// We cannot visit the start cave twice.
+				// We cannot repeate a cave if we have already repeated a cave
+				// Check to see if the stop sign "###" is at the beginning of the list (indicating that we have already explored a small cave twice)
+				if possiblePath != "start" && !(path@0 == "###" && repeatedSmallCave)
+				{
+					val = new array
+					val = deepCopy[path]
+					// If this is a repeated cave, add a "Stop sign" of ### to the front of the path.
+					// This will be checked on future runs to inidcate the path already includes a SINGLE cave being visited twice.
+					if repeatedSmallCave
+					{
+						val.pushFirst["###"]
+					}
+					val.push[possiblePath]
+					//println["val is $val"]
+					pathsTraversed.push[val]
+					//println["pathsTraversed is $pathsTraversed"]
+				}
+			}
+		}
+	}
+
+	println["Part II is $pathsFinished"]
+}
+
+pathMapper[sampleInputArr]
+pathMapper[caveInputFile]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
