@@ -1,0 +1,208 @@
+// Solution for 2021 Day 11: Dumbo Octopus
+// https://adventofcode.com/2021/day/11
+// Written in Frink by Chris Hansen
+// Website: https://www.circuitsandcode.net/
+// Twitter: https://twitter.com/CircuitsAndCode
+// Github: https://github.com/circuitsandcode
+// MIT License: https://github.com/circuitsandcode/AdventOfCode/blob/master/LICENSE
+
+start = now[]
+
+// Prepare Sample Input
+sampleInput = """dc-end
+HN-start
+start-kj
+dc-start
+dc-HN
+LN-dc
+HN-end
+kj-sa
+kj-HN
+kj-dc"""
+
+sampleSolution1 = 19
+sampleSolution2 = 103
+
+sampleInputArr = splitLines[sampleInput]
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative pathCurrent with your input file.
+caveInputFile = readLines["file:../Projects/AdventOfCode/2021/InputFiles/2021_12_input.txt"]
+
+// Create function to loop through the possible paths
+pathMapper[caveInput,sampleSolution1=0,sampleSolution2=0] :=
+{
+	// Split the input into arrays with regex. So kj-dc becomes [kj,dc]
+	cavePaths = new array
+	for caveSegments = caveInput
+	{
+		segmentArr = caveSegments =~ %r/^(\w+)\-(\w+)$/
+		cavePaths.push[segmentArr]
+	}
+	// Create a dictionary of caves and their adjacent caves
+	cavePathDict = new dict
+	for cavePath = cavePaths
+	{
+		// Each side of the array can be either a key or a value in the dictionary
+		// i.e. kj has a pathCurrent to dc and dc has a pathCurrent to kj
+		caveVal0 = cavePath@0
+		caveVal1 = cavePath@1
+		caveKey0 = cavePath@0
+		caveKey1 = cavePath@1
+		// Create keys in the dictionary with an empty array if they don't already exist
+		if !cavePathDict.containsKey[caveKey0]
+			cavePathDict@caveKey0 = new array
+		if !cavePathDict.containsKey[caveKey1]
+			cavePathDict@caveKey1 = new array
+		// Push the value into the dictionary key's array value
+		(cavePathDict@caveKey0).push[caveVal1]
+		(cavePathDict@caveKey1).push[caveVal0]
+	}
+	// Part I
+	// Start an array of the paths traversed with the start cave
+	// This will be a multi-dimensional array where each item is an array of the pathCurrent taken
+	pathsTraversed = [["start"]]
+	// Count the number of times we reach the end
+	pathsFinished = 0
+	// Repeat until all possible paths are taken
+	while length[pathsTraversed] != 0
+	{
+		// Remove the first path array from the pathsTraversed array
+		pathCurrent = pathsTraversed.popFirst[]
+		// Get the last item on the current pathCurrent array without removing it
+		// This is the cave the submarine is currently in
+		caveCurrent = pathCurrent.peek[]
+		// Get the possible paths from current cave from the cavePathDict dictionary
+		possiblePaths = cavePathDict@caveCurrent
+		// Loop through each cave in the possible paths avaialble
+		for possibleCave = possiblePaths
+		{
+			// If the next cave is end, increase pathsFinished
+			// That's all that will happen this iteration
+			if possibleCave == "end"
+			{
+				pathsFinished = pathsFinished + 1
+			} else
+			{
+				// Check to see if the next cave is lowercase using regex
+				smallCave = false
+				if possibleCave =~ %r/^[a-z]+$/
+				{
+					smallCave = true
+				}
+				// If the cave is lower, check to see if we have already been in the cave
+				visitedSmallCave = false
+				if pathCurrent.contains[possibleCave]
+				{
+					visitedSmallCave = true
+				}
+				// If either the cave is not small or we haven't visited it, add the possibleCave cave to our pathsTraversed array
+				// In other words, if both are true (the cave is small AND we visited it) than this section is skipped and the cave is not added to pathsTraversed
+				if !smallCave || !visitedSmallCave
+				{
+					// Build a new array for the path
+					newPath = new array
+					// Start with the current path that is being evaluated
+					// (Remember that it was removed from the pathsTraversed array
+					newPath = deepCopy[pathCurrent]
+					// Add the cave just evaluated to the path
+					newPath.push[possibleCave]
+					// Add the new path to the pathsTraversed to be evaluated on a future iteration
+					pathsTraversed.push[newPath]
+				}
+			}
+		}
+	}
+	// Print the number of paths completed from start to end
+	println["Part I Total possible paths: $pathsFinished"]
+	// Check the sample solution
+	if sampleSolution1 != 0
+	{
+		if sampleSolution1 == pathsFinished
+		{
+			println["The Sample Solution for part I is correct!"]
+		} else
+		{
+			println["The Sample Solution for part I is incorrect!"]
+		}
+	}
+	println[]
+
+	// Part II
+	// Create a pathsTraversed array to track the paths we've taken so far
+	// Part II has less comments then above since much of the logic is repeated.
+	// Only new code is commented
+	pathsTraversed = [["start"]]
+	pathsFinished = 0
+	while length[pathsTraversed] != 0
+	{
+		pathCurrent = pathsTraversed.popFirst[]
+		caveCurrent = pathCurrent.peek[]
+		possiblePaths = cavePathDict@caveCurrent
+		for possibleCave = possiblePaths
+		{
+			// Check if the cave is small and if the submarine has already been through it
+			smallCave = false
+			repeatedSmallCave = false
+			if possibleCave =~ %r/^[a-z]+$/
+			{
+				smallCave = true
+			}
+			// If the cave is small, check the pathCurrent array to see if the submarine has already explored it
+			if smallCave == true && pathCurrent.contains[possibleCave]
+			{
+				repeatedSmallCave = true
+			}
+			if possibleCave == "end"
+			{
+				pathsFinished = pathsFinished + 1
+			} else
+			{
+				// We cannot repeat another small cave if we have already repeated a small cave
+				// Check to see if the stop sign "###" is at the beginning of the list (indicating that we have already explored a small cave twice in the current path)
+				pathHasRepeatedSmallCave = false
+				if pathCurrent@0 == "###"
+				{
+					pathHasRepeatedSmallCave = true
+				}
+				// Check that the possibleCave is not start (we can only visit that once)
+				// And check that if we are not repeating a small cave when the path already has a repeated small cave on it
+				// i.e. Check to make sure that pathHasRepeatedSmallCave and repeatedSmallCave are not both true
+				if possibleCave != "start" && !(pathHasRepeatedSmallCave && repeatedSmallCave)
+				{
+					newPath = new array
+					newPath = deepCopy[pathCurrent]
+					// If this is the first repeated small cave, add a "Stop sign" of ### to the front of the newPath.
+					// This will be checked on future runs to indicate the pathCurrent already includes a SINGLE cave being visited twice
+					if repeatedSmallCave
+					{
+						newPath.pushFirst["###"]
+					}
+					newPath.push[possibleCave]
+					pathsTraversed.push[newPath]
+				}
+			}
+		}
+	}
+
+	// Print the number of paths completed from start to end
+	println["Part II Total possible paths: $pathsFinished"]
+	// Check the sample solution
+	if sampleSolution2 != 0
+	{
+		if sampleSolution2 == pathsFinished
+		{
+			println["The Sample Solution for part II is correct!"]
+		} else
+		{
+			println["The Sample Solution for part II is incorrect!"]
+		}
+	}
+	println[]
+}
+
+pathMapper[sampleInputArr,sampleSolution1,sampleSolution2]
+pathMapper[caveInputFile]
+
+end = now[]
+println["Program run time: " + ((end - start)*1.0 -> "seconds")]
