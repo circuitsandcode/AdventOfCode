@@ -26,18 +26,18 @@ basinInputData = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_0
 basinParser[basinInput,sampleSolution1=0,sampleSolution2=0] :=
 {
 	// Split the array into lines
-	sampleInputArr = splitLines[basinInput]
+	basinInputArr = splitLines[basinInput]
 
 	// Length of first line to determine length
-	mapLineLength = length[sampleInputArr@0]
-	mapLineDepth = length[sampleInputArr]
+	mapLineLength = length[basinInputArr@0]
+	mapLineDepth = length[basinInputArr]
 
 	// I made a border of 9s so that I can scan without accounting for the edge.
 	mapBorder = makeArray[[mapLineLength+2], 9]
 
 	mapArray = new array
 	mapArray.push[mapBorder]
-	for mapLine = sampleInputArr
+	for mapLine = basinInputArr
 	{
 		mapLineChar = map["parseInt",charList[mapLine]]
 		mapLineChar.push[9]
