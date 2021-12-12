@@ -20,10 +20,12 @@ sampleInput = """5483143223
 4846848554
 5283751526"""
 
-octopiInput = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_11_input.txt"]]
-
 sampleSolution1 = 1656
 sampleSolution2 = 195
+
+// Read the input file and process it through all functions (trim because there is a newline character at the end of the file
+// The input string is relative to my frink.jar file. Adjust this to the absolute or relative path with your input file.
+octopiInput = trim[read["file:../Projects/AdventOfCode/2021/InputFiles/2021_11_input.txt"]]
 
 octopiFlasher[octopiGrid,sampleSolution1=0,sampleSolution2=0] :=
 {
@@ -225,7 +227,7 @@ octopiFlasher[octopiGrid,sampleSolution1=0,sampleSolution2=0] :=
 	// Uncomment the code below to write the optional Animation
 	/*
 	println["Writing animation"]
-	a.write["OctopiAnimation1.gif", 500, 500]
+	a.write["OctopiAnimation.gif", 500, 500]
 	println["Done writing animation"]
 	*/
 }
